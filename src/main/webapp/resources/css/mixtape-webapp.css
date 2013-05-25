@@ -1,0 +1,124 @@
+.tooltip > div {
+	background-color: #FFFFFF;
+	border: 1px solid #888888;
+	display: none;
+	font-size: 11px;
+	line-height: 1.4;
+	opacity: 1;
+	padding: 10px;
+	position: absolute;
+	z-index: 1030;
+}
+
+.tooltip hr {
+	margin: 10px 0px;
+}
+
+.valueLabel {
+	border: 0;
+	color: #F6931F;
+	font-weight: bold;
+}
+
+.similarities .progress {
+	height: 10px !important;
+	min-height: 10px !important;
+}
+
+.ui-widget-content {
+	background: #FFFFFF url(img/ui-bg_flat_75_ffffff_40x100.png) 50% 50%
+		repeat-x;
+	border: 1px solid #CCCCCC;
+	border-radius: 0px !important;
+	color: #222222;
+	display: inline-block;
+	font-size: 14px;
+	height: 28px;
+	line-height: 28px;
+	width: 370px;
+}
+
+.ui-slider-handle {
+	background-attachment: scroll;
+	background: #E6E6E6 url(img/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50%
+		repeat-x;
+	border: 1px solid #D3D3D3;
+	height: 34px !important;
+}
+
+.ui-slider-handle :hover {
+	background: #DADADA url(img/ui-bg_glass_75_dadada_1x400.png) 50% 50%
+		repeat-x;
+}
+
+.ui-corner-all {
+	border-radius: 4px;
+}
+
+.queryResults li {
+	background-color: #EEEEEE;
+	border-bottom: 1px solid #CCCCCC;
+	cursor: pointer;
+	padding: 8px 24px 8px 50px;
+}
+
+.queryResults li:hover {
+	background-color: #F5F5F5;
+}
+
+.queryResults small {
+	color: #666666;
+}
+
+.queryResults i {
+	clear: both;
+	float: right;
+	margin-top: 15px;
+}
+
+#playlist {
+	max-height: 460px;
+	overflow: auto;
+}
+
+#playlist table {
+	background-color: #EEEEEE;
+	cursor: pointer;
+	margin-bottom: 0px;
+}
+
+#playlist td {
+	font-weight: bold;
+	vertical-align: middle;
+}
+
+#playlist small {
+	color: #666666;
+	display: block;
+	font-weight: normal;
+}
+
+.userWish {
+	color: #990000;
+}
+
+@media ( min-width :1000px) {
+	body>.container-fluid {
+		width: 1000px;
+		margin: 0 auto;
+	}
+}
+
+@media ( max-width :767px) {
+	body,body>.container-fluid {
+		padding-left: 0px !important;
+		padding-right: 0px !important;
+	}
+	.container-fluid {
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+	.btn {
+		margin-bottom: 10px;
+	}
+}
