@@ -138,7 +138,6 @@ $(document)
 							cache : false,
 							success : function(PlainObjectData, textStatus,
 									jqXHR) {
-								// TODO
 								console.log('Success adding wish');
 							},
 							error : function(jqXHR, textStatus, errorThrown) {
@@ -497,9 +496,7 @@ $(document)
 
 						initQueryInputHandler();
 						initPlaylist();
-
-						// checkServerState();
-
+						checkServerState();
 						playlistPusher.connect();
 					};
 
