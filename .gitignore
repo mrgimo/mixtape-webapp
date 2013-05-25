@@ -1,4 +1,10 @@
+# Directories #
+/mixtapeData
+/target
+
+# Misc files #
 *.class
+*.log
 
 # Package Files #
 *.jar
