@@ -222,7 +222,9 @@
 		<script src="<c:url value="/resources/js/jquery.atmosphere.js" />"></script>
 		<script src="<c:url value="/resources/js/jquery.base64.min.js" />"></script>
 		<script src="<c:url value="/resources/js/init.js" />" /></script>
-		<script src="<c:url value="/resources/js/initAuthenticated.js" />" /></script>
+		<c:if test="${isAuthenticated}">
+			<script src="<c:url value="/resources/js/initAuthenticated.js" />" /></script>
+		</c:if>
 
 	</div>
 
