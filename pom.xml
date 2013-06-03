@@ -17,6 +17,7 @@
 		<jstl.version>1.2</jstl.version>
 		<atmosphere.version>1.1.0.RC2</atmosphere.version>
 		<springframework.version>3.2.2.RELEASE</springframework.version>
+		<springsecurity.version>3.1.4.RELEASE</springsecurity.version>
 		<junit.version>4.11</junit.version>
 		<slf4j.version>1.7.5</slf4j.version>
 	</properties>
@@ -36,17 +37,28 @@
 		<!-- http://docs.codehaus.org/display/JETTY/Maven+Jetty+Plugin -->
 		<!-- http://wiki.eclipse.org/Jetty/Tutorial/Jetty_and_Maven_HelloWorld -->
 
+		<!-- utils -->
 		<dependency>
 			<groupId>jstl</groupId>
 			<artifactId>jstl</artifactId>
 			<version>${jstl.version}</version>
 		</dependency>
 
-		<!-- jetty -->
+		<!-- <dependency> <groupId>javax.servlet.jsp</groupId> <artifactId>javax.servlet.jsp-api</artifactId> 
+			<version>2.2.1</version> </dependency> -->
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.4</version>
+			<!-- <scope>compile</scope> -->
+		</dependency>
+
+		<!-- webserver -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1-b09</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -172,6 +184,24 @@
 			<!-- <scope>test</scope> -->
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+			<version>${springsecurity.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${springsecurity.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+			<version>${springsecurity.version}</version>
+		</dependency>
+
 		<!-- testing -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -285,7 +315,7 @@
 			<plugin>
 				<groupId>org.apache.tomcat.maven</groupId>
 				<artifactId>tomcat7-maven-plugin</artifactId>
-				<version>2.2-SNAPSHOT</version>
+				<version>2.1</version>
 				<configuration>
 					<path>/mixtape</path>
 				</configuration>

@@ -1,6 +1,7 @@
 package ch.hsr.mixtape.webapp.controller;
 
 import java.io.UnsupportedEncodingException;
+import java.security.Principal;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +50,7 @@ import ch.hsr.mixtape.webapp.NoOpView;
 @Controller
 public class AjaxRequestController implements MixtapeExceptionHandling {
 
-	private static final String ATMOSPHERE_PLAYLIST_PATH = "/push";
+	private static final String ATMOSPHERE_PLAYLIST_PATH = "/playlist/push";
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(AjaxRequestController.class);
@@ -56,15 +58,24 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	@Autowired
 	private ViewResolver viewResolver;
 
+	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.GET, value = "/server/checkStatus")
 	public ResponseEntity<Object> checkServerStatus() {
 		return getResponseEntity(HttpStatus.OK, "", null);
+	}
+
+	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
+	@RequestMapping(method = RequestMethod.GET, value = "/server/getStatistics")
+	public ModelAndView getServerStatistics() {
+		return new ModelAndView("systemstatus_viewhelper", "systemstatus",
+				ApplicationFactory.getSystemService().getSystemStatus());
 	}
 
 	/**
 	 * @param term
 	 * @return songquery_viewhelper view
 	 */
+	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.GET, value = "/search")
 	public ModelAndView searchSong(@RequestParam("term") String term) {
 		return new ModelAndView("songquery_viewhelper", "queriedSongs",
@@ -75,12 +86,13 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @return playlist_viewhelper view
 	 * @throws UninitializedPlaylistException
 	 */
+	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.GET, value = "/playlist/get")
 	public ModelAndView getPlaylist() throws UninitializedPlaylistException {
 		ApplicationFactory.getPlaylistService().createPlaylist(
 				DummyData.getDummyPlaylistSettings());
 		return new ModelAndView("playlist_viewhelper", "playlist",
-				ApplicationFactory.getPlaylistService().getCurrentPlaylist());
+				ApplicationFactory.getPlaylistService().getNextSongs());
 	}
 
 	/**
@@ -92,9 +104,10 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @throws PlaylistChangedException
 	 * @throws GUIException
 	 */
+	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/sort")
 	public ResponseEntity<Object> sortPlaylist(HttpServletRequest request,
-			@RequestParam(value = "songId") long songId,
+			Principal principal, @RequestParam(value = "songId") long songId,
 			@RequestParam(value = "oldPosition") int oldPosition,
 			@RequestParam(value = "newPosition") int newPosition)
 			throws UninitializedPlaylistException, PlaylistChangedException,
@@ -102,7 +115,7 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 		if (ApplicationFactory.getPlaylistService().alterSorting(songId,
 				oldPosition, newPosition)) {
 			try {
-				notifyPlaylistSubscribers(request);
+				notifyPlaylistSubscribers(request, principal);
 			} catch (Exception e) {
 				subscriberNotificationFailed(e);
 			}
@@ -122,16 +135,17 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @throws PlaylistChangedException
 	 * @throws GUIException
 	 */
+	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/remove")
 	public ResponseEntity<Object> removeSong(HttpServletRequest request,
-			@RequestParam(value = "songId") long songId,
+			Principal principal, @RequestParam(value = "songId") long songId,
 			@RequestParam(value = "songPosition") int songPosition)
 			throws UninitializedPlaylistException, PlaylistChangedException,
 			GUIException {
 		if (ApplicationFactory.getPlaylistService().removeSong(songId,
 				songPosition)) {
 			try {
-				notifyPlaylistSubscribers(request);
+				notifyPlaylistSubscribers(request, principal);
 			} catch (Exception e) {
 				subscriberNotificationFailed(e);
 			}
@@ -148,15 +162,16 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @throws UninitializedPlaylistException
 	 * @throws GUIException
 	 */
+	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/wish")
 	public @ResponseBody
 	ResponseEntity<Object> addWish(HttpServletRequest request,
-			@RequestParam(value = "songId") long songId)
+			Principal principal, @RequestParam(value = "songId") long songId)
 			throws UninitializedPlaylistException, GUIException {
 		try {
 			if (ApplicationFactory.getPlaylistService().addWish(songId)) {
 				LOG.debug("Adding wish to playlist succeeded.");
-				notifyPlaylistSubscribers(request);
+				notifyPlaylistSubscribers(request, principal);
 				return getResponseEntity(HttpStatus.OK, "", null);
 			} else {
 				LOG.error("Adding wish to playlist failed.");
@@ -184,10 +199,11 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @param request
 	 * @return ModelAndView
 	 */
+	@PreAuthorize("permitAll")
 	@RequestMapping(value = ATMOSPHERE_PLAYLIST_PATH, method = RequestMethod.GET)
 	public ModelAndView subscribeToPlaylist(HttpServletRequest request)
 			throws Exception {
-		System.err.println("subscribeToPlaylist");
+		LOG.debug("Subscribing client to playlist updates.");
 		AtmosphereResource resource = (AtmosphereResource) request
 				.getAttribute(FrameworkConfig.ATMOSPHERE_RESOURCE);
 
@@ -209,11 +225,10 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 */
 	private void registerClient(AtmosphereResource resource,
 			HttpServletRequest request, HttpServletResponse response) {
-		System.err.println("registerClient");
+		LOG.debug("Registering client for playlist updates.");
 		// Log all events on the console, including WebSocket events.
 		resource.addEventListener(new WebSocketEventListenerAdapter());
 
-		// res.setContentType("text/html;charset=ISO-8859-1");
 		response.setContentType("text/html;charset=UTF-8");
 
 		Broadcaster broadcaster = lookupBroadcaster(request.getPathInfo());
@@ -244,16 +259,20 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 * @throws Exception
 	 *             If the view cannot be rendered.
 	 */
-	private void notifyPlaylistSubscribers(HttpServletRequest request)
-			throws Exception {
-		System.err.println("notifyPlaylistSubscribers");
+	private void notifyPlaylistSubscribers(HttpServletRequest request,
+			Principal principal) throws Exception {
+		LOG.debug("Notifying playlist subscribers about an update.");
 		Broadcaster broadcaster = lookupBroadcaster(request.getPathInfo());
 
 		// http://stackoverflow.com/questions/9705293/render-multiple-views-within-a-single-request
 		View view = viewResolver.resolveViewName("playlist_viewhelper",
 				Locale.GERMAN);
+
 		ModelAndView playlistView = new ModelAndView(view, "playlist",
-				ApplicationFactory.getPlaylistService().getCurrentPlaylist());
+				ApplicationFactory.getPlaylistService().getNextSongs());
+		if (principal != null)
+			playlistView.addObject("isAuthenticated", true);
+
 		MockHttpServletResponse mockResponse = new MockHttpServletResponse();
 		playlistView.getView().render(playlistView.getModel(), request,
 				mockResponse);

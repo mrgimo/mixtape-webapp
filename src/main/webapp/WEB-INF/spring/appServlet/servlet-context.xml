@@ -15,8 +15,7 @@
 		system-properties-mode="OVERRIDE" ignore-resource-not-found="true" />
 
 	<!-- Scans within the base package of the application for @Components to 
-		configure as beans -->
-	<!-- @Controller, @Service, @Configuration, etc. -->
+		configure as beans @Controller, @Service, @Configuration, etc. -->
 	<context:component-scan base-package="ch.hsr.mixtape.webapp" />
 
 	<!-- Enables the Spring MVC @Controller programming model -->
@@ -32,8 +31,5 @@
 		<property name="prefix" value="/WEB-INF/views/" />
 		<property name="suffix" value=".jsp" />
 	</bean>
-
-	<!-- Imports user-defined @Controller beans that process client requests -->
-	<!-- <beans:import resource="controllers.xml" /> -->
 
 </beans>

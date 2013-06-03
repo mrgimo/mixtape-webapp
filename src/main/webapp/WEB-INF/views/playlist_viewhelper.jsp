@@ -13,8 +13,6 @@
 				<c:forEach items="${playlist}" var="song">
 					<tr>
 						<td class="tooltip" data-toggle="tooltip"><c:choose>
-								<c:when test="${empty song.songSimilarity}">
-								</c:when>
 								<c:when test="${not empty song.songSimilarity}">
 									<i class="icon-tasks"></i>
 									<div>
@@ -65,14 +63,15 @@
 							<c:if test="${song.userWish}">class="userWish"</c:if>>${song.title}</strong>
 							<small>${song.artist}</small> <input type="hidden"
 							value="${song.id}" /></td>
-						<td><div class="input-prepend input-append">
-								<a class="btn btn-info">
-									<i class="icon-move"></i>
-								</a>
-								<button class="btn btn-danger">
-									<i class="icon-remove"></i>
-								</button>
-							</div></td>
+						<td><c:if test="${isAuthenticated}">
+								<div class="input-prepend input-append">
+									<a class="btn btn-info"> <i class="icon-move"></i>
+									</a>
+									<button class="btn btn-danger">
+										<i class="icon-remove"></i>
+									</button>
+								</div>
+							</c:if></td>
 					</tr>
 				</c:forEach>
 			</c:when>

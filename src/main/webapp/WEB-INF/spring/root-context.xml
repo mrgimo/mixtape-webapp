@@ -14,5 +14,5 @@
 		system-properties-mode="OVERRIDE" ignore-resource-not-found="true" />
 
 	<!-- <util:properties id="appProperties" location="classpath:application.properties" /> -->
-
+	
 </beans>

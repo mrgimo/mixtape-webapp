@@ -1,4 +1,21 @@
-.tooltip > div {
+.center {
+	float: none;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.error {
+	background-color: #FFEEEE;
+	border: 1px solid #B94A48;
+	padding: 8px 15px;
+	margin-bottom: 20px;
+}
+
+.error p {
+	margin: 0;
+}
+
+.tooltip>div {
 	background-color: #FFFFFF;
 	border: 1px solid #888888;
 	display: none;

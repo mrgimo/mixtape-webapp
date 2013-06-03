@@ -1,0 +1,61 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+	<global-method-security pre-post-annotations="enabled" />
+
+	<http pattern="/resources/css/**" security="none" />
+	<http pattern="/resources/img/**" security="none" />
+	<http pattern="/resources/js/**" security="none" />
+
+	<http auto-config="true" use-expressions="true"
+		entry-point-ref="ajaxAwareLoginUrlAuthenticationEntryPoint"
+		disable-url-rewriting="true">
+
+		<intercept-url pattern="/login" access="isAnonymous()" />
+		<intercept-url pattern="/playlist/sort" access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/playlist/remove" access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/server/getStatistics" access="hasRole('ROLE_ADMIN')" />
+		<!-- <intercept-url pattern="/**" access="permitAll" /> -->
+
+		<session-management invalid-session-url="/?timeout=1"
+			session-authentication-error-url="/login?authError=1"
+			session-fixation-protection="newSession" />
+
+		<form-login login-page="/login"
+			authentication-success-handler-ref="authenticationSuccessHandler"
+			authentication-failure-handler-ref="authenticationFailureHandler" />
+
+		<logout logout-url="/logout" logout-success-url="/?logout=1"
+			invalidate-session="true" delete-cookies="JSESSIONID" />
+		<!-- <custom-filter before="LOGOUT_FILTER" ref="logoutFilter" /> -->
+
+	</http>
+
+	<authentication-manager>
+		<authentication-provider>
+			<password-encoder hash="sha-256" />
+			<user-service>
+				<user name="admin"
+					password="8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+					authorities="ROLE_ADMIN" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="ajaxAwareLoginUrlAuthenticationEntryPoint"
+		class="ch.hsr.mixtape.webapp.security.AjaxAwareLoginUrlAuthenticationEntryPoint">
+		<beans:constructor-arg value="/login" />
+	</beans:bean>
+
+	<!-- Custom authentication handlers for correctly handling AJAX requests -->
+	<beans:bean id="authenticationSuccessHandler"
+		class="ch.hsr.mixtape.webapp.security.AjaxAuthenticationSuccessHandler" />
+	<beans:bean id="authenticationFailureHandler"
+		class="ch.hsr.mixtape.webapp.security.AjaxAuthenticationFailureHandler" />
+
+</beans:beans>
