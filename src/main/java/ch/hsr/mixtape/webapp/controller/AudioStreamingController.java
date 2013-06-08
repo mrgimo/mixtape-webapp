@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.ViewResolver;
 
-import ch.hsr.mixtape.application.ApplicationFactory;
+import ch.hsr.mixtape.application.service.ApplicationFactory;
 import ch.hsr.mixtape.application.service.StreamSubscriber;
 import ch.hsr.mixtape.webapp.NoOpView;
 

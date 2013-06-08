@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import ch.hsr.mixtape.exception.PlaylistChangedException;
-import ch.hsr.mixtape.exception.UninitializedPlaylistException;
+import ch.hsr.mixtape.exception.InvalidPlaylistException;
+import ch.hsr.mixtape.webapp.controller.ControllerUtils;
 
 /**
  * This class is only a helper for keeping the exception handler in each
@@ -17,9 +18,8 @@ public class MixtapeExceptionHandler {
 
 	public static ResponseEntity<String> handleException(Exception e, Logger log) {
 		String message;
-		if (e instanceof UninitializedPlaylistException) {
-			log.error("Handling " + UninitializedPlaylistException.class + ".",
-					e);
+		if (e instanceof InvalidPlaylistException) {
+			log.error("Handling " + InvalidPlaylistException.class + ".", e);
 			message = e.getMessage();
 		} else if (e instanceof PlaylistChangedException) {
 			log.error("Handling " + PlaylistChangedException.class + ".", e);
@@ -36,7 +36,8 @@ public class MixtapeExceptionHandler {
 						+ "Please see server log for more information.";
 		}
 
-		return new ResponseEntity<String>(message, HttpStatus.BAD_REQUEST);
+		return ControllerUtils.getResponseEntity(HttpStatus.BAD_REQUEST,
+				message);
 	}
 
 }

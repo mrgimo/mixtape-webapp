@@ -8,6 +8,7 @@
 		</div>
 	</c:when>
 	<c:when test="${not empty systemstatus}">
+
 		<div>
 			<table class="table">
 				<thead>
@@ -43,107 +44,42 @@
 					</tr>
 				</tbody>
 			</table>
-			<a href="#" class="btn btn-primary btn-mini">Datenverzeichnis neu
-				einlesen</a>
+			<div id="scanMusicDirectory">
+				<a href="#" class="btn btn-primary btn-mini">Musikverzeichnis
+					neu einlesen</a> <span class="label label-warning hide">Das
+					Musikverzeichnis wird gerade eingelesen.</span>
+			</div>
 
 			<h3>Analyse-Fortschritt</h3>
-			<div class="progress progress-striped active">
-				<div class="bar bar-success" style="width: 10%;"></div>
+			<div id="systemStatusAnalysisProgress">
+				<c:choose>
+					<c:when test="${empty systemstatus.pendingSongs}">
+						<div class="progress">
+							<div class="bar bar-success" style="width: 100%;">100%;</div>
+						</div>
+						<div>
+							<p>Analyse abgeschlossen. Keine Musikstücke zur Analyse
+								pendent.</p>
+						</div>
+					</c:when>
+					<c:otherwise>
+						<div class="progress progress-striped active">
+							<div class="bar bar-success"
+								style="width: ${systemstatus.progress}%;">${systemstatus.progress}%</div>
+						</div>
+						<div id="systemStatusHead">
+							Titel <span>Fortschritt</span>
+						</div>
+						<ul class="table unstyled" id="pendingSongs">
+							<c:forEach var="song" items="${systemstatus.pendingSongs}">
+								<li>${song.title} - ${song.artist} <span>in
+										Wartestellung</span>
+								</li>
+							</c:forEach>
+						</ul>
+					</c:otherwise>
+				</c:choose>
 			</div>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Titel</th>
-						<th>Fortschritt</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>A Song for you - Interpret 1</td>
-						<td>45%</td>
-					</tr>
-					<tr>
-						<td>Singing all Night long - Interpret 1</td>
-						<td>20%</td>
-					</tr>
-					<tr>
-						<td>Gravity - Interpret 1</td>
-						<td>68%</td>
-					</tr>
-					<tr>
-						<td>Upon the City - Interpret 1</td>
-						<td>37%</td>
-					</tr>
-					<tr>
-						<td>Song1 - Interpret 1</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song2 - Interpret 1</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song3 - Interpret 1</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song4 - Interpret 1</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song5 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song6 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song7 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song8 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song9 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song10 - Interpret 2</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song11 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song12 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song13 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song14 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song15 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song16 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-					<tr>
-						<td>Song17 - Interpret 3</td>
-						<td>In Wartestellung</td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
 	</c:when>
 </c:choose>

@@ -18,9 +18,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import ch.hsr.mixtape.application.ApplicationFactory;
-import ch.hsr.mixtape.application.DummyData;
-import ch.hsr.mixtape.exception.UninitializedPlaylistException;
+import ch.hsr.mixtape.application.service.ApplicationFactory;
+import ch.hsr.mixtape.application.service.PlaylistService;
+import ch.hsr.mixtape.exception.InvalidPlaylistException;
+import ch.hsr.mixtape.model.PlaylistSettings;
 import ch.hsr.mixtape.model.Song;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandler;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
@@ -31,49 +32,47 @@ import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
  * @author Stefan Derungs
  */
 @Controller
-public class PageRequestController implements MixtapeExceptionHandling {
+public class StartpageController implements MixtapeExceptionHandling {
 
 	private static final Logger LOG = LoggerFactory
-			.getLogger(PageRequestController.class);
+			.getLogger(StartpageController.class);
 
+	private static final PlaylistService PLAYLIST_SERVICE = ApplicationFactory
+			.getPlaylistService();
+
+	/**
+	 * This is the handling method for homepage calls.
+	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/")
 	public ModelAndView start(HttpServletRequest request, Principal principal) {
 		ModelMap model = new ModelMap();
 
 		model.addAttribute("loginIncludeCancel", true);
-		model.addAttribute("playlist", getPlaylist());
+		try {
+			model.addAttribute("playlist", PLAYLIST_SERVICE.getPlaylist());
+		} catch (InvalidPlaylistException e) {
+			model.addAttribute("playlist", null);
+		}
+
 		model.addAttribute("queriedSongs", new ArrayList<Song>());
 
 		if (principal != null) {
 			model.addAttribute("isAuthenticated", true);
-			
+
 			model.addAttribute("systemstatus", ApplicationFactory
 					.getSystemService().getSystemStatus());
+
 			try {
-				model.addAttribute("playlistsettings", ApplicationFactory
-						.getPlaylistService().getCurrentPlaylistSettings());
-			} catch (UninitializedPlaylistException e) {
-				LOG.error("Error while fetching current playlist settings. "
-						+ "Ommiting for Frontend output.", e);
+				model.addAttribute("playlistSettings",
+						PLAYLIST_SERVICE.getPlaylistSettings());
+			} catch (InvalidPlaylistException e) {
+				model.addAttribute("playlistSettings", new PlaylistSettings());
 			}
 		} else {
 			model.addAttribute("isAuthenticated", false);
 		}
 
 		return new ModelAndView("start", model);
-	}
-
-	private ArrayList<Song> getPlaylist() {
-		ApplicationFactory.getPlaylistService().createPlaylist(
-				DummyData.getDummyPlaylistSettings()); // TODO: dummy remove
-
-		ArrayList<Song> playlist;
-		try {
-			playlist = ApplicationFactory.getPlaylistService().getNextSongs();
-		} catch (UninitializedPlaylistException e) {
-			playlist = new ArrayList<Song>();
-		}
-		return playlist;
 	}
 
 	@Override

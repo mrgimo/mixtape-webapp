@@ -1,18 +1,62 @@
-.center {
-	float: none;
-	margin-left: auto;
-	margin-right: auto;
+.tab-content ul {
+	background-color: #EEEEEE;
 }
 
-.error {
-	background-color: #FFEEEE;
-	border: 1px solid #B94A48;
-	padding: 8px 15px;
-	margin-bottom: 20px;
+.tab-content li {
+	border-bottom: 1px solid #CCCCCC;
+	cursor: pointer;
+	padding: 8px 24px 8px 50px;
 }
 
-.error p {
-	margin: 0;
+.tab-content li:hover {
+	background-color: #F5F5F5;
+}
+
+/**
+ * Query
+ */
+.queryResults small {
+	color: #666666;
+}
+
+.queryResults i {
+	clear: both;
+	float: right;
+	margin-top: 15px;
+}
+
+#wishQueryResults ul {
+	max-height: 580px;
+	overflow: auto;
+}
+
+/**
+ * Playlist
+ */
+#playlist {
+	max-height: 460px;
+	overflow: auto;
+}
+
+#playlist table {
+	background-color: #EEEEEE;
+	cursor: pointer;
+	margin-bottom: 0px;
+}
+
+#playlist td {
+	font-weight: bold;
+	vertical-align: middle;
+}
+
+#playlist small {
+	color: #666666;
+	display: block;
+	font-weight: normal;
+}
+
+.userWish {
+	color: #990000;
 }
 
 .tooltip>div {
@@ -31,15 +75,78 @@
 	margin: 10px 0px;
 }
 
-.valueLabel {
-	border: 0;
-	color: #F6931F;
-	font-weight: bold;
-}
-
 .similarities .progress {
 	height: 10px !important;
 	min-height: 10px !important;
+}
+
+/**
+ * System status
+ */
+#systemStatusContainer .progress .bar {
+	color: #333333;
+	text-align: center;
+}
+
+#systemStatusAnalysisProgress span {
+	float: right;
+	width: 220px;
+}
+
+#systemStatusAnalysisProgress span:after {
+	clear: both;
+	float: none;
+}
+
+#systemStatusAnalysisProgress ul {
+	background-color: #FFFFFF;
+	display: block;
+	max-height: 370px;
+	overflow-y: auto;
+}
+
+#systemStatusHead, 
+#systemStatusAnalysisProgress li {
+	padding: 8px;
+}
+
+#systemStatusHead {
+	font-weight: bold;
+}
+
+#systemStatusHead span {
+	width: 240px;
+}
+
+/**
+ * Playlist settings
+ */
+.playlistSettings ul {
+	max-height: 290px;
+	margin-top: 20px;
+	overflow: auto;
+}
+
+#playlistSettingsSelectedSongs ul {
+	border: 2px solid #F6931F;
+}
+
+.playlistSettings li i {
+	display: none;
+}
+
+.playlistSettings select {
+	display: none;
+}
+
+.slider-container dt {
+	font-weight: normal;
+}
+
+.slider-container .valueLabel {
+	border: 0;
+	color: #F6931F;
+	font-weight: bold;
 }
 
 .ui-widget-content {
@@ -72,51 +179,29 @@
 	border-radius: 4px;
 }
 
-.queryResults li {
-	background-color: #EEEEEE;
-	border-bottom: 1px solid #CCCCCC;
-	cursor: pointer;
-	padding: 8px 24px 8px 50px;
+/**
+ * Misc
+ */
+.center {
+	float: none;
+	margin-left: auto;
+	margin-right: auto;
 }
 
-.queryResults li:hover {
-	background-color: #F5F5F5;
+.no-lateral-margin {
+	margin-left: 0px;
+	margin-right: 0px;
 }
 
-.queryResults small {
-	color: #666666;
+.error {
+	background-color: #FFEEEE;
+	border: 1px solid #B94A48;
+	padding: 8px 15px;
+	margin-bottom: 20px;
 }
 
-.queryResults i {
-	clear: both;
-	float: right;
-	margin-top: 15px;
-}
-
-#playlist {
-	max-height: 460px;
-	overflow: auto;
-}
-
-#playlist table {
-	background-color: #EEEEEE;
-	cursor: pointer;
-	margin-bottom: 0px;
-}
-
-#playlist td {
-	font-weight: bold;
-	vertical-align: middle;
-}
-
-#playlist small {
-	color: #666666;
-	display: block;
-	font-weight: normal;
-}
-
-.userWish {
-	color: #990000;
+.error p {
+	margin: 0;
 }
 
 @media ( min-width :1000px) {

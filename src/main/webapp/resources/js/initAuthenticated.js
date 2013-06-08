@@ -124,7 +124,9 @@ function base64_decode(data) {
 }
 
 window.Mixtape.serverStatisticsFetchInterval = 5000;
-window.Mixtape.isDisplayingError = false;
+
+window.Mixtape.modal.isDisplayingError = false;
+
 window.Mixtape.server.getStatistics = function() {
 	$.ajax({
 		url : document.location.pathname + 'server/getStatistics',
@@ -139,12 +141,10 @@ window.Mixtape.server.getStatistics = function() {
 		error : function(jqXHR, textStatus, errorThrown) {
 			if (jqXHR.status == "401") {
 				console.log("NOT  AUTHORIZED!");
-				console.debug(this);
 				Mixtape.authentication.showLoginForm(this);
 				return;
 			}
 			console.log("Error while retrieving server statistics.");
-			console.debug(jqXHR);
 			Mixtape.modal.displayError(jqXHR);
 			setTimeout(Mixtape.server.getStatistics,
 					serverStatisticsFetchInterval);
@@ -152,6 +152,74 @@ window.Mixtape.server.getStatistics = function() {
 		}
 	});
 };
+
+window.Mixtape.server.musicDirectory = {
+	checkInterval : 5000,
+	timeout : {},
+	scan : function() {
+		this.disableBtn();
+		$
+				.ajax({
+					url : document.location.pathname + 'server/scanDirectory',
+					cache : false,
+					success : function(PlainObjectData, textStatus, jqXHR) {
+						var result = jqXHR
+								.getResponseHeader("X-AJAX-mixtape-isScanning");
+						if (result === "true")
+							Mixtape.server.musicDirectory.isScanningDirectory();
+					},
+					error : function(jqXHR, textStatus, errorThrown) {
+						if (jqXHR.status == "401") {
+							console.log("NOT  AUTHORIZED!");
+							Mixtape.authentication.showLoginForm(this);
+							return;
+						}
+						console
+								.log("Error while submitting command for scanning directory.");
+						Mixtape.modal.displayError(jqXHR);
+						Mixtape.server.musicDirectory.enableBtn();
+					}
+				});
+	},
+	isScanningDirectory : function() {
+		if (Mixtape.modal.isDisplayingServerState)
+			return;
+
+		$.ajax({
+			url : document.location.pathname + 'server/isScanningDirectory',
+			cache : false,
+			success : function(PlainObjectData, textStatus, jqXHR) {
+				var result = jqXHR
+						.getResponseHeader("X-AJAX-mixtape-isScanning");
+				if (result === "false") {
+					Mixtape.server.musicDirectory.enableBtn();
+					return;
+				}
+
+				Mixtape.server.musicDirectory.timeout = setTimeout(
+						Mixtape.server.musicDirectory.isScanningDirectory,
+						Mixtape.server.musicDirectory.checkInterval);
+			},
+			error : function(jqXHR, textStatus, errorThrown) {
+				if (jqXHR.status == "401") {
+					console.log("NOT  AUTHORIZED!");
+					Mixtape.authentication.showLoginForm(this);
+					return;
+				}
+			}
+		});
+	},
+	disableBtn : function() {
+		$('#scanMusicDirectory a').attr('disabled', 'disabled');
+		$('#scanMusicDirectory a').removeClass('btn-primary');
+		$('#scanMusicDirectory span').show();
+	},
+	enableBtn : function() {
+		$('#scanMusicDirectory span').hide();
+		$('#scanMusicDirectory a').addClass('btn-primary');
+		$('#scanMusicDirectory a').removeAttr('disabled');
+	}
+}
 
 /**
  * Additional playlist functionality after login.
@@ -226,7 +294,8 @@ window.Mixtape.playlist.removeSong = function(listIndex, songId) {
 window.Mixtape.playlist.initRemoveSongHandler = function() {
 	$("#playlist .btn-danger").click(
 			function(event) {
-				if (Mixtape.isDisplayingError || Mixtape.isDisplayingServerState)
+				if (Mixtape.modal.isDisplayingError
+						|| Mixtape.modal.isDisplayingServerState)
 					return;
 
 				var row = $(this).closest('tr');
@@ -262,10 +331,111 @@ window.Mixtape.playlist.initRemoveSongHandler = function() {
 			});
 };
 
+window.Mixtape.playlistSettings = {
+	resultPlaceholder : $('#playlistSettingsQueryResults ul:first').html()
+			.trim(),
+	placeholder : $('#playlistSettingsSelectedSongs ul:first').html().trim(),
+	initialSliderValue : 30,
+	init : function() {
+		$('#playlistSettings input[type=reset]').click(function() {
+			Mixtape.playlistSettings.reset();
+		});
+		this.initStartSongSelector();
+		this.reset();
+	},
+	initStartSongSelector : function() {
+		var placeholderSelector = '#playlistSettingsSelectedSongs .ul-placeholder';
+		$('#playlistSettings ul').sortable({
+			connectWith : '#playlistSettings ul',
+			over : function(event, ui) {
+				$(placeholderSelector).hide();
+			},
+			out : function(event, ui) {
+				$(placeholderSelector).show();
+			},
+			stop : function(event, ui) {
+				var listSize = $('#playlistSettingsSelectedSongs li').length;
+				if (listSize > 1) {
+					$('.ul-placeholder').remove();
+					Mixtape.playlistSettings.updateSelectContainer(listSize);
+				} else if (listSize == 0) {
+					var placeholder = Mixtape.playlistSettings.placeholder;
+					$('#playlistSettingsSelectedSongs ul').html(placeholder);
+					Mixtape.playlistSettings.updateSelectContainer(listSize);
+				} else {
+					$('.ul-placeholder').show();
+				}
+
+			}
+		});
+		$('#playlistSettings ul').disableSelection();
+	},
+	updateSelectContainer : function(listSize) {
+		$('.playlistSettingsSongSelect').html('');
+
+		if (listSize <= 1)
+			return;
+
+		$('#playlistSettingsSelectedSongs li').each(function(index) {
+			$('.playlistSettingsSongSelect').append($('<option>', {
+				value : $(this).find('input').val()
+			}));
+		});
+	},
+	reset : function() {
+		$('#playlistSettings ul').html('');
+		$('#playlistSettingsQueryResults ul').html(this.resultPlaceholder);
+		$('#playlistSettingsSelectedSongs ul').html(this.placeholder);
+
+		$('#startLengthInMinutes').change(function() {
+			$('#startLengthInSongs').val('');
+		});
+		$('#startLengthInSongs').change(function() {
+			$('#startLengthInMinutes').val('');
+		})
+
+		$('.slider').slider(
+				{
+					slide : function(event, ui) {
+						$(event.target).closest('.slider-container').find(
+								'.valueLabel').text(ui.value);
+						$(event.target).closest('.slider-container').find(
+								'input[type=hidden]').val(ui.value);
+					},
+					value : Mixtape.playlistSettings.initialSliderValue,
+					min : 0,
+					max : 100,
+					step : 10
+				});
+		$('.slider-container .valueLabel').text(this.initialSliderValue);
+		$('.slider-container input[type=hidden]').val(this.initialSliderValue);
+	},
+	onSubmit : function() {
+		$('form#playlistSettings').submit(
+				function(event) {
+					$('form#playlistSettings input[name=term]').attr(
+							"disabled", "disabled");
+					event.preventDefault();
+					$.ajax({
+						url : document.location.pathname + 'playlist/create',
+						type : 'POST',
+						data : $('form#playlistSettings').serialize(),
+						cache : false,
+						success : function(PlainObjectData, textStatus, jqXHR) {
+							console.log('Success sorting.');
+						},
+						error : function(jqXHR, textStatus, errorThrown) {
+							Mixtape.modal.displayError(jqXHR);
+						}
+					});
+				});
+	}
+};
+
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 window.Mixtape.streaming = {
 	audio : new Audio(),
-	audioContext : new AudioContext(),
+	// audioContext : new AudioContext(),
 	source : {},
 	buffers : [],
 	socket : $.atmosphere,
@@ -322,7 +492,6 @@ window.Mixtape.streaming = {
 		// server.
 		onMessage : function(response) {
 			console.log("Receiving streaming data.");
-			console.debug(response);
 			try {
 				var json = $.parseJSON(response.responseBody);
 
@@ -345,7 +514,6 @@ window.Mixtape.streaming = {
 				var fileReader = new FileReader();
 				fileReader.onload = function() {
 					console.log("File read!");
-					console.debug(this.result);
 
 					// Mixtape.streaming.source.buffer = this.result;
 					// Mixtape.streaming.audio.play();
@@ -357,7 +525,6 @@ window.Mixtape.streaming = {
 									this.result,
 									function(decodedBuffer) {
 										console.log("AUDIO:");
-										console.debug(Mixtape.streaming.source);
 										Mixtape.streaming.source.buffer = decodedBuffer;
 										Mixtape.streaming.source
 												.connect(Mixtape.streaming.audioContext.destination);
@@ -367,7 +534,6 @@ window.Mixtape.streaming = {
 									function(error) {
 										console
 												.log("An error in decodeAudioData");
-										console.debug(error);
 									});
 				};
 				fileReader.readAsArrayBuffer(blob);
@@ -385,30 +551,19 @@ window.Mixtape.streaming = {
 
 $(document).ready(function() {
 	/**
-	 * Initialize `Distance Slider` for playlist settings
-	 */
-	$('#slider').slider({
-		slide : function(event, ui) {
-			$('#amountLabel').text(ui.value);
-			$('#amount').val(ui.value);
-		},
-		value : 25,
-		min : 0,
-		max : 100,
-		step : 10
-	});
-	$('#amountLabel').text($('#slider').slider('value'));
-	$('#amount').val($('#slider').slider('value'));
-
-	/**
 	 * Initialize additional functionality.
 	 */
 	Mixtape.playlist.init();
+	Mixtape.playlistSettings.init();
 	// Mixtape.server.getStatistics();
 	// if (!window.Uint8Array)
 	// registerUint8Array();
+
+	$('#scanMusicDirectory a').click(function(event) {
+		Mixtape.server.musicDirectory.scan();
+	});
 });
 
 window.addEventListener('load', function(e) {
-	//Mixtape.streaming.connect();
+	// Mixtape.streaming.connect();
 });

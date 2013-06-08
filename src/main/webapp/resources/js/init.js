@@ -4,9 +4,6 @@ window.Mixtape = {
 
 	serverStatusCheckInterval : 5000,
 	queryInputFireDelay : 500,
-	isDisplayingAuthForm : false,
-	/* To prevent closing other error messages */
-	isDisplayingServerState : false,
 
 	/**
 	 * Modal Object
@@ -14,11 +11,15 @@ window.Mixtape = {
 	 * Use this to display default (error) messages, login form, etc.
 	 */
 	modal : {
+		isDisplayingAuthForm : false,
+		/* To prevent closing other error messages */
+		isDisplayingServerState : false,
+		defaultFooter : $('.modal .modal-footer').html().trim(),
 		reset : function() {
 			$('.modal').modal('hide');
 			$('.modal .modal-header h4').text('');
 			$('.modal .modal-body').text('');
-			$('.modal .modal-footer').text('');
+			$('.modal .modal-footer').html(this.defaultFooter);
 			$('.modal .btn-primary').text('OK');
 			$('.modal .modal-header').show();
 			$('.modal .modal-body').show();
@@ -28,7 +29,7 @@ window.Mixtape = {
 			this.isDisplayingServerState = false;
 		},
 		displayError : function(XmlHttpRequest) {
-			if (isDisplayingServerState)
+			if (this.isDisplayingServerState)
 				return;
 
 			Mixtape.modal.reset();
@@ -56,18 +57,12 @@ window.Mixtape = {
 	 * Authentication
 	 */
 	authentication : {
-		pendingAuthentications : new Array(),
 		onPageLoad : function() {
 			this.displayLogoutMessage();
 		},
-		handlePendingAuthentications : function() {
-			if (this.pendingAuthentications.length === 0)
-				return;
-			this.showLoginForm(this.pendingAuthentications.pop());
-		},
 		showLoginForm : function(pendingAjaxRequest) {
-			if (Mixtape.isDisplayingServerState || Mixtape.isDisplayingAuthForm) {
-				this.pendingAuthentications.push(pendingAjaxRequest);
+			if (Mixtape.modal.isDisplayingServerState
+					|| Mixtape.modal.isDisplayingAuthForm) {
 				return;
 			}
 
@@ -91,7 +86,7 @@ window.Mixtape = {
 				Mixtape.authentication.processLogin(event);
 			});
 
-			Mixtape.isDisplayingAuthForm = true;
+			Mixtape.modal.isDisplayingAuthForm = true;
 		},
 		displayLogoutMessage : function() {
 			if (location.search.indexOf("logout=1") !== -1) {
@@ -106,9 +101,8 @@ window.Mixtape = {
 
 				$('.modal button').click(function(event) {
 					Mixtape.modal.reset();
-					this.handlePendingAuthentications();
 				});
-				Mixtape.isDisplayingAuthForm = true;
+				Mixtape.modal.isDisplayingAuthForm = true;
 			}
 		},
 		isAuthenticationSuccessful : function(jqXHR) {
@@ -183,10 +177,10 @@ window.Mixtape = {
 				backdrop : 'static',
 				keyboard : false
 			});
-			Mixtape.isDisplayingServerState = true;
+			Mixtape.modal.isDisplayingServerState = true;
 		},
 		hideStatusAndReload : function() {
-			if (Mixtape.isDisplayingServerState) {
+			if (Mixtape.modal.isDisplayingServerState) {
 				Mixtape.modal.reset();
 				Mixtape.playlist.update.connect();
 			}
@@ -235,45 +229,61 @@ window.Mixtape = {
 	 */
 	query : {
 		initInputHandler : function() {
-			$('input.querySong').on(
-					'input keyup',
-					function() {
-						var $this = $(this);
+			$('input.querySong').on('input keyup', function() {
+				var $this = $(this);
 
-						if ($this.val().length < 2)
-							return;
+				if ($this.val().length < 2)
+					return;
 
-						clearTimeout($this.data('timer'));
-						$this.data('timer', setTimeout(function() {
-							$this.removeData('timer');
-							Mixtape.query.querySong($this.val(), $this
-									.attr('data-queryTarget'));
-						}, Mixtape.queryInputFireDelay));
-					});
+				clearTimeout($this.data('timer'));
+				$this.data('timer', setTimeout(function() {
+					$this.removeData('timer');
+					var max = $this.attr('data-maxResults');
+					var target = $this.attr('data-queryTarget');
+					Mixtape.query.querySong($this.val(), max, target);
+				}, Mixtape.queryInputFireDelay));
+			});
+			$('form[name=wishSong]').submit(function(event) {
+				event.preventDefault();
+			});
 		},
 
 		/**
 		 * @param term
 		 *            Song query parameter
+		 * @param maxResults
+		 *            [optional] Set a custom maximum of query results. This
+		 *            value is limited server-side to prevent exploit.
 		 * @param targetElementId
 		 *            Successful results are placed in the element with this id.
 		 */
-		querySong : function(term, targetElementId) {
-			$.ajax({
-				url : document.location.pathname + 'search?term=' + term,
-				success : function(PlainObjectData, textStatus, jqXHR) {
-					$('#' + targetElementId).html(PlainObjectData);
+		querySong : function(term, maxResults, targetElementId) {
+			var requestUrl = document.location.pathname + 'search?term=' + term;
 
-					// Initialize clickhandler for wishes.
-					$('.queryResults li').click(function(event) {
-						event.preventDefault();
-						Mixtape.playlist.addWish(this);
+			var parsed_maxResults = parseInt(maxResults);
+			if (!isNaN(parsed_maxResults))
+				requestUrl += '&maxResults=' + parsed_maxResults;
+
+			$
+					.ajax({
+						url : requestUrl,
+						success : function(PlainObjectData, textStatus, jqXHR) {
+							$('#' + targetElementId).html(PlainObjectData);
+
+							// Initialize handlers for query results.
+							if (targetElementId.indexOf('wish') !== -1) {
+								Mixtape.playlist.initWishHandler();
+							} else if (targetElementId
+									.indexOf('playlistSettings') !== -1) {
+								Mixtape.playlistSettings
+										.initStartSongSelector();
+
+							}
+						},
+						error : function(jqXHR, textStatus, errorThrown) {
+							Mixtape.modal.displayError(jqXHR);
+						}
 					});
-				},
-				error : function(jqXHR, textStatus, errorThrown) {
-					displayError(jqXHR);
-				}
-			});
 		}
 	},
 
@@ -381,6 +391,13 @@ window.Mixtape = {
 			}
 		},
 
+		initWishHandler : function() {
+			$('#wishQueryResults li').click(function(event) {
+				event.preventDefault();
+				Mixtape.playlist.addWish(this);
+			});
+		},
+
 		/**
 		 * Adds a wish to the playlist upon user selection.
 		 */
@@ -394,7 +411,7 @@ window.Mixtape = {
 					console.log('Success adding wish.');
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
-					displayError(jqXHR);
+					Mixtape.modal.displayError(jqXHR);
 				}
 			});
 		}
@@ -403,21 +420,17 @@ window.Mixtape = {
 
 $(document).ready(function() {
 	/**
-	 * Bootstrap
+	 * Tab-handling upon URL-call.
 	 */
-	// Tab-handling upon URL-call.
-	$(function() {
-		var hash = location.hash;
-		var hashPieces = hash.split('?');
-		var activeTab = $('[href=' + hashPieces[0] + ']');
-		activeTab && activeTab.tab('show');
-	});
-	// Tab-Switching with no default-behaviour prevention.
-	$('.nav a').click(function() {
-		// No e.preventDefault() here
+	var hash = location.hash;
+	var hashPieces = hash.split('?');
+	var activeTab = $('[href=' + hashPieces[0] + ']');
+	activeTab && activeTab.tab('show');
+	$('.nav a').click(function(event) {
+		// No event.preventDefault() here
 		$(this).tab('show');
 	});
-	$('#startButton').click(function() {
+	$('#startButton').click(function(event) {
 		$('.nav a[href="#music"]').tab('show');
 	});
 

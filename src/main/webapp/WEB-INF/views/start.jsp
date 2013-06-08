@@ -1,10 +1,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ page contentType="text/html; charset=UTF-8"%>
 <!DOCTYPE html>
 <html lang="de">
 <head>
 
-<title>mixTape</title>
+<title>MixTape</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -31,7 +32,7 @@
 				<div class="tab-pane active" id="start">
 					<h2>Start</h2>
 					<p>
-						<strong>mixTape</strong> ist ein Projekt dreier Studenten der <abbr
+						<strong>MixTape</strong> ist ein Projekt dreier Studenten der <abbr
 							title="Hochschule Rapperswil">HSR</abbr>, welches im Rahmen einer
 						Bachelorarbeit umgesetzt wurde. Ziel dieser Applikation ist das
 						finden von Ähnlichkeiten zwischen verschiedenen Musikstücken auf
@@ -94,59 +95,11 @@
 				<c:if test="${isAuthenticated}">
 					<div class="tab-pane" id="playlistSettings">
 						<h2>Wiedergabelisten-Konfiguration</h2>
-						<p>mixTape wird mit den hier definierten Eigenschaften die
+						<p>MixTape wird mit den hier definierten Eigenschaften die
 							Wiedergabeliste generieren.</p>
-						<form class="form-horizontal" method="get" name="querySong"
-							action="/search">
-							<h4>Zufallsliste generieren</h4>
-							<p>Wähle ein Musikstück, von welchem aus eine zufällige
-								Wiedergabeliste generiert werden soll.</p>
-							<div class="input-append">
-								<input type="text" class="form-search span4" id="randomSong"
-									name="randomSong"
-									placeholder="Titel, Interpreten oder Album suchen..." />
-								<button type="button" class="btn btn-primary">Suchen</button>
-							</div>
-							<div class="randomSongSearchResults"></div>
-							<input type="hidden" name="songId" value="" />
 
-							<hr />
+						<%@ include file="/WEB-INF/views/playlist_settings_viewhelper.jsp"%>
 
-							<label class="checkbox"> <input type="checkbox" value="1"
-								title="Wenn aktiviert, wird die Abstandsfunktion in die Generierung miteinbezogen, andernfalls nicht." />
-								<small>Abstandsfunktion</small>
-							</label>
-							<p>Legt fest, wie gross die Ähnlichkeit zwischen zwei
-								aufeinanderfolgende Lieder sein muss. Eine höhere Ähnlichkeit
-								bedeutet ein langsameres Fortschreiten bei einer
-								Musikrichtungsänderung. Eine tiefere Ähnlichkeit bedeutet eine
-								grössere Änderungsmöglichkeit zwischen zwei Musikstücken.</p>
-							<div>
-								Ähnlichkeitsfaktor: <span id="amountLabel" class="valueLabel"></span>
-							</div>
-							<input type="hidden" id="amount" name="amount" />
-							<div class="input-prepend input-append">
-								<span class="add-on">tief</span>
-								<div id="slider"></div>
-								<span class="add-on">hoch</span>
-							</div>
-
-							<hr />
-
-							<label class="checkbox"> <input type="checkbox" value="1"
-								title="Wenn aktiviert, wird die BPM-Angabe in die Generierung miteinbezogen, andernfalls nicht." />
-								<small> Anzahl <abbr title="Beats per Minute">BPM</abbr>
-							</small>
-							</label>
-							<p>Legt die Anzahl BPM fest, die ein Musikstück haben muss,
-								um in die Wiedergabeliste aufgenommen werden zu können. Im
-								Hintergrund nimmt mixTape automatisch eine Abweichung von +/- 10
-								BPMs an.</p>
-							<input type="number" min="20" max="250" class="span1" id="bpm"
-								name="bpm" placeholder="BPM" /> <input type="submit"
-								class="btn btn-primary" value="Wiedergabeliste generieren" />
-
-						</form>
 					</div>
 				</c:if>
 				<c:if test="${isAuthenticated}">
@@ -213,8 +166,9 @@
 		</c:choose>
 
 		<script src="<c:url value="/resources/js/jquery-1.9.1.js" />"></script>
-		<script
-			src="<c:url value="/resources/js/jquery-ui-1.10.3.custom.min.js" />"></script>
+		<%-- <script
+			src="<c:url value="/resources/js/jquery-ui-1.10.3.custom.min.js" />"></script> --%>
+			 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 		<script
 			src="<c:url value="/resources/js/jquery-ui.touch-punch.min.js" />"></script>
 		<script src="<c:url value="/resources/js/bootstrap.min.js" />"></script>

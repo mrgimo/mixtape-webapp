@@ -17,13 +17,13 @@ import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,27 +33,28 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
-import ch.hsr.mixtape.application.DummyData;
 import ch.hsr.mixtape.application.service.ApplicationFactory;
 import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
+import ch.hsr.mixtape.exception.PlaylistChangedException;
+import ch.hsr.mixtape.model.PlaylistSettings;
 import ch.hsr.mixtape.webapp.GUIException;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandler;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
 import ch.hsr.mixtape.webapp.NoOpView;
 
 /**
- * This controller is responsible for handling all AJAX requests.
+ * This controller is responsible for handling all playlist related requests.
  * 
  * @author Stefan Derungs
  */
 @Controller
-public class AjaxRequestController implements MixtapeExceptionHandling {
-
-	private static final String ATMOSPHERE_PLAYLIST_PATH = "/playlist/push";
+public class PlaylistController implements MixtapeExceptionHandling {
 
 	private static final Logger LOG = LoggerFactory
-			.getLogger(AjaxRequestController.class);
+			.getLogger(PlaylistController.class);
+
+	private static final String ATMOSPHERE_PLAYLIST_PATH = "/playlist/push";
 
 	@Autowired
 	private ViewResolver viewResolver;
@@ -61,40 +62,35 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	private PlaylistService playlistService = ApplicationFactory
 			.getPlaylistService();
 
-	@PreAuthorize("permitAll")
-	@RequestMapping(method = RequestMethod.GET, value = "/server/checkStatus")
-	public ResponseEntity<Object> checkServerStatus() {
-		return getResponseEntity(HttpStatus.OK, "");
-	}
-
-	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
-	@RequestMapping(method = RequestMethod.GET, value = "/server/getStatistics")
-	public ModelAndView getServerStatistics() {
-		return new ModelAndView("systemstatus_viewhelper", "systemstatus",
-				ApplicationFactory.getSystemService().getSystemStatus());
-	}
-
 	/**
 	 * @param term
 	 * @return songquery_viewhelper view
 	 */
 	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.GET, value = "/search")
-	public ModelAndView searchSong(@RequestParam("term") String term) {
+	public ModelAndView searchSong(
+			@RequestParam("term") String term,
+			@RequestParam(value = "maxResults", defaultValue = "0") int maxResults) {
 		return new ModelAndView("songquery_viewhelper", "queriedSongs",
-				ApplicationFactory.getQueryService().findSongsByTerm(term));
+				ApplicationFactory.getQueryService().findSongsByTerm(term,
+						maxResults));
 	}
 
 	/**
-	 * @return playlist_viewhelper view
+	 * @return In case an error occurred but no exception was thrown, the
+	 *         HTTP-Response-Header `Warning` contains error description.
+	 * @throws PlaylistChangedException
 	 * @throws InvalidPlaylistException
+	 * @throws GUIException
 	 */
-	@PreAuthorize("permitAll")
-	@RequestMapping(method = RequestMethod.GET, value = "/playlist/get")
-	public ModelAndView getPlaylist() throws InvalidPlaylistException {
-		playlistService.createPlaylist(DummyData.getDummyPlaylistSettings());
-		return new ModelAndView("playlist_viewhelper", "playlist",
-				playlistService.getNextSongs());
+	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
+	@RequestMapping(method = RequestMethod.POST, value = "/playlist/create")
+	public ResponseEntity<String> createPlaylist(
+			HttpServletRequest request,
+			Principal principal,
+			@ModelAttribute("playlistSettings") PlaylistSettings playlistSettings) {
+		playlistService.createPlaylist(playlistSettings);
+		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
 	/**
@@ -102,26 +98,22 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 *      PlaylistService.alterSorting for parameter information.
 	 * @return In case an error occurred but no exception was thrown, the
 	 *         HTTP-Response-Header `Warning` contains error description.
+	 * @throws PlaylistChangedException
+	 * @throws InvalidPlaylistException
+	 * @throws GUIException
 	 */
 	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/sort")
-	public ResponseEntity<Object> sortPlaylist(HttpServletRequest request,
+	public ResponseEntity<String> sortPlaylist(HttpServletRequest request,
 			Principal principal, @RequestParam(value = "songId") long songId,
 			@RequestParam(value = "oldPosition") int oldPosition,
-			@RequestParam(value = "newPosition") int newPosition) {
+			@RequestParam(value = "newPosition") int newPosition)
+			throws InvalidPlaylistException, PlaylistChangedException,
+			GUIException {
 
-		final String errorMessage = "Sorting playlist failed.";
-		try {
-			playlistService.alterSorting(songId, oldPosition, newPosition);
-			notifyPlaylistSubscribers(request, principal);
-			return getResponseEntity(HttpStatus.OK, "");
-		} catch (GUIException e) {
-			LOG.error("Notifying playlist subscribers failed ", e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		} catch (Exception e) {
-			LOG.error(errorMessage, e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		}
+		playlistService.alterSorting(songId, oldPosition, newPosition);
+		notifyPlaylistSubscribers(request, principal);
+		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
 	/**
@@ -129,47 +121,39 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 *      PlaylistService.alterSorting for parameter information.
 	 * @return In case an error occurred but no exception was thrown, the
 	 *         HTTP-Response-Header `Warning` contains error description.
+	 * @throws PlaylistChangedException
+	 * @throws InvalidPlaylistException
+	 * @throws GUIException
 	 */
 	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/remove")
-	public ResponseEntity<Object> removeSong(HttpServletRequest request,
+	public ResponseEntity<String> removeSong(HttpServletRequest request,
 			Principal principal, @RequestParam(value = "songId") long songId,
-			@RequestParam(value = "songPosition") int songPosition) {
-		final String errorMessage = "Removing song from playlist failed.";
-		try {
-			playlistService.removeSong(songId, songPosition);
-			notifyPlaylistSubscribers(request, principal);
-			return getResponseEntity(HttpStatus.OK, "");
-		} catch (GUIException e) {
-			LOG.error("Notifying playlist subscribers failed ", e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		} catch (Exception e) {
-			LOG.error(errorMessage, e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		}
+			@RequestParam(value = "songPosition") int songPosition)
+			throws InvalidPlaylistException, PlaylistChangedException,
+			GUIException {
+
+		playlistService.removeSong(songId, songPosition);
+		notifyPlaylistSubscribers(request, principal);
+		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
 	/**
 	 * @return If an error occured, the HTTP-Response-Header `Warning` contains
 	 *         error description.
+	 * @throws InvalidPlaylistException
+	 * @throws GUIException
 	 */
 	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/wish")
 	public @ResponseBody
-	ResponseEntity<Object> addWish(HttpServletRequest request,
-			Principal principal, @RequestParam(value = "songId") long songId) {
-		final String errorMessage = "Adding wish to playlist failed.";
-		try {
-			playlistService.addWish(songId);
-			notifyPlaylistSubscribers(request, principal);
-			return getResponseEntity(HttpStatus.OK, "");
-		} catch (GUIException e) {
-			LOG.error("Notifying playlist subscribers failed ", e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		} catch (Exception e) {
-			LOG.error(errorMessage, e);
-			return getResponseEntity(HttpStatus.BAD_REQUEST, errorMessage);
-		}
+	ResponseEntity<String> addWish(HttpServletRequest request,
+			Principal principal, @RequestParam(value = "songId") long songId)
+			throws InvalidPlaylistException, GUIException {
+
+		playlistService.addWish(songId);
+		notifyPlaylistSubscribers(request, principal);
+		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
 	/**
@@ -223,10 +207,8 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 		if (HeaderConfig.LONG_POLLING_TRANSPORT.equalsIgnoreCase(header)) {
 			request.setAttribute(ApplicationConfig.RESUME_ON_BROADCAST,
 					Boolean.TRUE);
-			resource.suspend(-1);
-		} else {
-			resource.suspend(-1);
 		}
+		resource.suspend(-1);
 	}
 
 	/**
@@ -237,10 +219,11 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 	 *      /samples
 	 *      /spring-tiles/src/main/java/org/atmosphere/samples/pubsub/spring
 	 *      /PubSubController.java]
+	 * @throws InvalidPlaylistException
 	 * @throws GUIException
 	 */
 	private void notifyPlaylistSubscribers(HttpServletRequest request,
-			Principal principal) throws GUIException {
+			Principal principal) throws InvalidPlaylistException, GUIException {
 		final String errorMessage = "Notifying playlist subscribers failed: ";
 		try {
 			LOG.debug("Notifying playlist subscribers about an update.");
@@ -251,7 +234,8 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 					Locale.GERMAN);
 
 			ModelAndView playlistView = new ModelAndView(view, "playlist",
-					playlistService.getNextSongs());
+					playlistService.getPlaylist());
+
 			if (principal != null)
 				playlistView.addObject("isAuthenticated", true);
 
@@ -260,8 +244,6 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 					mockResponse);
 
 			broadcaster.broadcast(mockResponse.getContentAsString());
-		} catch (InvalidPlaylistException e) {
-			throw new GUIException(errorMessage + "No playlist available.", e);
 		} catch (UnsupportedEncodingException e) {
 			throw new GUIException(errorMessage + "Content could not be "
 					+ "retrieved from mock response.", e);
@@ -292,16 +274,6 @@ public class AjaxRequestController implements MixtapeExceptionHandling {
 			return BroadcasterFactory.getDefault().lookup(
 					decodedPath[decodedPath.length - 1], true);
 		}
-	}
-
-	private ResponseEntity<Object> getResponseEntity(HttpStatus status,
-			String message) {
-		if (!message.isEmpty()) {
-			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.set("Warning", message);
-			return new ResponseEntity<Object>(httpHeaders, status);
-		}
-		return new ResponseEntity<Object>(status);
 	}
 
 	@Override

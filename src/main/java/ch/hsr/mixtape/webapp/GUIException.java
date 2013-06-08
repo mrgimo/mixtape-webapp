@@ -11,8 +11,8 @@ public class GUIException extends Exception {
 
 	private static final long serialVersionUID = 928843708491669132L;
 
-	public GUIException(String message) {
-		super(message);
+	public GUIException(String string, Exception e) {
+		super(string, e);
 	}
 
 }

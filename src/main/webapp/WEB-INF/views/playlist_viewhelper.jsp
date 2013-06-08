@@ -10,49 +10,41 @@
 				</tr>
 			</c:when>
 			<c:when test="${not empty playlist}">
-				<c:forEach items="${playlist}" var="song">
+				<c:forEach items="${playlist.item}" var="item">
 					<tr>
 						<td class="tooltip" data-toggle="tooltip"><c:choose>
-								<c:when test="${not empty song.songSimilarity}">
+								<c:when test="${not empty item.antecessor}">
 									<i class="icon-tasks"></i>
 									<div>
 										<p>
-											Ähnlichkeit zwischen<br /> <small>» ${song.title} -
-												${song.artist}</small> <small>»
-												${song.songSimilarity.antecessor.title} -
-												${song.songSimilarity.antecessor.artist}</small>
+											Ähnlichkeit zwischen<br /> <small>»
+												${item.current.title} - ${item.current.artist}</small> <small>»
+												${item.antecessor.title} - ${item.antecessor.artist}</small>
 										</p>
 										<hr />
 										<div class='similarities'>
-											<label>Gesamt: <span class='valueLabel'>${song.songSimilarity.total}%</span></label>
+											<label>Gesamt: <span class='valueLabel'>${item.total}%</span></label>
 											<div class='progress'>
-												<div class='bar'
-													style='width: ${song.songSimilarity.total}%;'></div>
+												<div class='bar' style='width: ${item.total}%;'></div>
 											</div>
-											<small>Tempo: <span class='valueLabel'>${song.songSimilarity.rhythmic}%</span></small>
+											<small>Harmonisch: <span class='valueLabel'>${item.harmonic}%</span></small>
 											<div class='progress'>
-												<div class='bar'
-													style='width: ${song.songSimilarity.rhythmic}%;'></div>
+												<div class='bar' style='width: ${song.harmonic}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Melodie: <span class='valueLabel'>${song.songSimilarity.melodic}%</span></small>
+											<small>Wahrnehmend: <span class='valueLabel'>${item.perceptual}%</span></small>
 											<div class='progress'>
-												<div class='bar'
-													style='width: ${song.songSimilarity.melodic}%;'></div>
+												<div class='bar' style='width: ${item.perceptual}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Instrumentalisierung/MFCC: <span
-												class='valueLabel'>${song.songSimilarity.mfcc}%</span></small>
+											<small>Spektral: <span class='valueLabel'>${song.spectral}%</span></small>
 											<div class='progress'>
-												<div class='bar'
-													style='width: ${song.songSimilarity.mfcc}%;'></div>
+												<div class='bar' style='width: ${item.spectral}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Perceptional Features: <span
-												class='valueLabel'>${song.songSimilarity.perceptional}%</span></small>
+											<small>Rhythmisch: <span class='valueLabel'>${item.temporal}%</span></small>
 											<div class='progress'>
-												<div class='bar'
-													style='width: ${song.songSimilarity.perceptional}%;'></div>
+												<div class='bar' style='width: ${item.temporal}%;'></div>
 											</div>
 											<div class='clearfix'></div>
 										</div>
@@ -60,9 +52,9 @@
 								</c:when>
 							</c:choose></td>
 						<td><strong
-							<c:if test="${song.userWish}">class="userWish"</c:if>>${song.title}</strong>
-							<small>${song.artist}</small> <input type="hidden"
-							value="${song.id}" /></td>
+							<c:if test="${item.userWish}">class="userWish"</c:if>>${item.current.title}</strong>
+							<small>${item.current.artist}</small> <input type="hidden"
+							value="${item.current.id}" /></td>
 						<td><c:if test="${isAuthenticated}">
 								<div class="input-prepend input-append">
 									<a class="btn btn-info"> <i class="icon-move"></i>
