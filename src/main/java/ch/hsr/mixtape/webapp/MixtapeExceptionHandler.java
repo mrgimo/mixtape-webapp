@@ -1,12 +1,11 @@
 package ch.hsr.mixtape.webapp;
 
 import org.slf4j.Logger;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.util.ClassUtils;
+import org.springframework.web.servlet.ModelAndView;
 
-import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
-import ch.hsr.mixtape.webapp.controller.ControllerUtils;
+import ch.hsr.mixtape.exception.PlaylistChangedException;
 
 /**
  * This class is only a helper for keeping the exception handler in each
@@ -16,7 +15,7 @@ import ch.hsr.mixtape.webapp.controller.ControllerUtils;
  */
 public class MixtapeExceptionHandler {
 
-	public static ResponseEntity<String> handleException(Exception e, Logger log) {
+	public static ModelAndView handleException(Exception e, Logger log) {
 		String message;
 		if (e instanceof InvalidPlaylistException) {
 			log.error("Handling " + InvalidPlaylistException.class + ".", e);
@@ -36,8 +35,10 @@ public class MixtapeExceptionHandler {
 						+ "Please see server log for more information.";
 		}
 
-		return ControllerUtils.getResponseEntity(HttpStatus.BAD_REQUEST,
-				message);
+		ModelAndView mav = new ModelAndView("error_viewhelper");
+		mav.addObject("class", ClassUtils.getShortName(e.getClass()));
+		mav.addObject("message", message);
+		return mav;
 	}
 
 }

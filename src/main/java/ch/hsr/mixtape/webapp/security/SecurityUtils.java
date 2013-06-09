@@ -7,7 +7,7 @@ import org.springframework.security.web.util.RequestMatcher;
 
 public class SecurityUtils {
 
-	public static final String AJAX_AUTH_HEADER = "X-AjaxAuthentication_result";
+	public static final String AJAX_AUTH_HEADER = "X-MixTape-AuthenticationResult";
 
 	public static final String AUTH_OK_HEADER_VALUE = "auth_ok";
 

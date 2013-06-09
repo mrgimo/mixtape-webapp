@@ -3,7 +3,7 @@
 <%@ page contentType="text/html; charset=UTF-8"%>
 
 <form:form class="form-horizontal playlistSettings" method="POST"
-	name="createPlaylist" action="/playlist/create"
+	name="playlistSettings" action="/playlist/create"
 	modelAttribute="playlistSettings">
 	<div class="clearfix">
 		<h4>Ausgangslieder</h4>
@@ -28,7 +28,9 @@
 				</div>
 			</div>
 			<form:select path="startSongs" class="playlistSettingsSongSelect"
-				multiple="true"></form:select>
+				multiple="true" itemLabel="title" itemValue="id">
+				<form:options items="${startSongs}" />
+			</form:select>
 		</div>
 	</div>
 
@@ -36,9 +38,12 @@
 
 	<div class="clearfix">
 		<h4>Dauer der Wiedergabeliste</h4>
-		<p>In diesem Abschnitt kannst du die anfängliche Länge der
+		<p>
+			In diesem Abschnitt kannst du die anfängliche Länge der
 			Wiedergabeliste einstellen. Du kannst wählen zwischen einer
-			zeitlichen Länge <strong>oder</strong> einer minimalen Anzahl an Musikstücken.</p>
+			zeitlichen Länge <strong>oder</strong> einer minimalen Anzahl an
+			Musikstücken.
+		</p>
 		<div>
 			<dl class="dl-horizontal">
 				<dt>
@@ -46,7 +51,7 @@
 				</dt>
 				<dd>
 					<form:input type="number" path="startLengthInMinutes"
-						cssClass="span2" />
+						cssClass="span2" value="0" />
 				</dd>
 			</dl>
 			<dl class="dl-horizontal">
@@ -55,7 +60,7 @@
 				</dt>
 				<dd>
 					<form:input type="number" path="startLengthInSongs"
-						cssClass="span2" />
+						cssClass="span2" value="20" />
 				</dd>
 			</dl>
 		</div>
@@ -140,7 +145,6 @@
 	<hr />
 
 	<form:hidden path="id" />
-	<form:hidden path="creationDate" />
 
 	<input type="submit" class="btn btn-primary"
 		value="Wiedergabeliste generieren" />

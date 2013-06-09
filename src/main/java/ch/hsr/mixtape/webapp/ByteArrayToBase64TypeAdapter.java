@@ -1,4 +1,4 @@
-package ch.hsr.mixtape.webapp.controller;
+package ch.hsr.mixtape.webapp;
 
 import java.lang.reflect.Type;
 

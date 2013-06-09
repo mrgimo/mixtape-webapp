@@ -35,12 +35,13 @@ window.Mixtape = {
 			Mixtape.modal.reset();
 			$('.modal h4').text('Fehler ' + XmlHttpRequest.status);
 
-			if (XmlHttpRequest.status == '404') {
+			if (XmlHttpRequest.status == '404')
 				$('.modal .modal-body').text(
 						'Die Anfrage konnte nicht verarbeitet werden.');
-			} else {
+			else if (XmlHttpRequest.status == '400')
+				$('.modal .modal-body').html(XmlHttpRequest.responseText);
+			else
 				$('.modal .modal-body').text(XmlHttpRequest.responseText);
-			}
 
 			$('.modal').modal({
 				backdrop : 'static',
@@ -90,7 +91,6 @@ window.Mixtape = {
 		},
 		displayLogoutMessage : function() {
 			if (location.search.indexOf("logout=1") !== -1) {
-				console.log("should display logout now");
 				$('.modal .modal-header h4').text('Logout erfolgt.');
 				$('.modal .modal-body').hide();
 
@@ -106,7 +106,8 @@ window.Mixtape = {
 			}
 		},
 		isAuthenticationSuccessful : function(jqXHR) {
-			var result = jqXHR.getResponseHeader('X-AjaxAuthentication_result');
+			var result = jqXHR
+					.getResponseHeader('X-MixTape-AuthenticationResult');
 			return result !== null && result !== "auth_failure"
 					&& result === "auth_ok";
 		},
@@ -204,20 +205,14 @@ window.Mixtape = {
 						Mixtape.server.hideStatusAndReload();
 					setTimeout(Mixtape.server.checkStatus,
 							Mixtape.serverStatusCheckInterval);
-					return true;
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
-					console.log("REQUEST 2:");
-					console.debug(jqXHR);
-					console.debug(textStatus);
-					console.debug(errorThrown);
-					return;
-					console.log("Error on server status update request.");
 					displayStatus(jqXHR);
 					setTimeout(Mixtape.server.checkStatus,
 							Mixtape.serverStatusCheckInterval);
-					return false;
 				}
+
+			// TODO: cleanup statusCodes and errorHandling working?
 			});
 		}
 	},
@@ -228,7 +223,9 @@ window.Mixtape = {
 	 * Handler for input fields.
 	 */
 	query : {
-		initInputHandler : function() {
+		defaultContent : $('#wishQueryResults ul').html(),
+		disabledContent : $('<li>Suche inaktiv aufgrund fehlender Wiedergabeliste.</li>'),
+		initAllQueryInputHandlers : function() {
 			$('input.querySong').on('input keyup', function() {
 				var $this = $(this);
 
@@ -243,9 +240,21 @@ window.Mixtape = {
 					Mixtape.query.querySong($this.val(), max, target);
 				}, Mixtape.queryInputFireDelay));
 			});
+		},
+		enableWishInputHandler : function() {
+			if ($('form[name=wishSong] input.querySong').attr('disabled') !== 'disabled')
+				return;
+
+			$('form[name=wishSong] input.querySong').removeAttr('disabled');
+			$('#wishQueryResults ul').html(this.defaultContent);
 			$('form[name=wishSong]').submit(function(event) {
 				event.preventDefault();
 			});
+		},
+		disableWishInputHandler : function() {
+			$('form[name=wishSong] input.querySong').attr('disabled',
+					'disabled');
+			$('#wishQueryResults ul').html(this.disabledContent);
 		},
 
 		/**
@@ -298,7 +307,12 @@ window.Mixtape = {
 		 * be called each time the playlist gets updated. This method is
 		 * overwritten in initAuthenticated.js!
 		 */
-		init : function() {
+		init : function(isPlaylistInitialized) {
+			if (isPlaylistInitialized)
+				Mixtape.query.enableWishInputHandler();
+			else
+				Mixtape.query.disableWishInputHandler();
+
 			Mixtape.playlist.initTooltips();
 		},
 
@@ -362,6 +376,10 @@ window.Mixtape = {
 					console.log('Atmosphere connected using '
 							+ response.transport + '.');
 					this.transport = response.transport;
+
+					var isPlaylistInitialized = response.headers['X-MixTape-isPlaylistInitialized'] === "true";
+					if (isPlaylistInitialized)
+						Mixtape.query.enableWishInputHandler();
 				},
 				onTransportFailure : function(errorMsg, request) {
 					console.log('Atmosphere transport failure occurred!');
@@ -373,8 +391,9 @@ window.Mixtape = {
 				},
 				onMessage : function(response) {
 					console.log('Atmosphere message received.');
+					var isPlaylistInitialized = response.headers['X-MixTape-isPlaylistInitialized'] === "true";
 					$('#playlist').html(response.responseBody);
-					Mixtape.playlist.init();
+					Mixtape.playlist.init(isPlaylistInitialized);
 				},
 				onClose : function(response) {
 					console.log('Atmosphere disconnected.');
@@ -420,6 +439,17 @@ window.Mixtape = {
 
 $(document).ready(function() {
 	/**
+	 * Initialize everything.
+	 */
+	Mixtape.authentication.onPageLoad();
+	Mixtape.query.initAllQueryInputHandlers();
+	Mixtape.playlist.init();
+	// Mixtape.server.checkStatus();
+	Mixtape.playlist.update.connect();
+});
+
+$(window).load(function() {
+	/**
 	 * Tab-handling upon URL-call.
 	 */
 	var hash = location.hash;
@@ -428,18 +458,14 @@ $(document).ready(function() {
 	activeTab && activeTab.tab('show');
 	$('.nav a').click(function(event) {
 		// No event.preventDefault() here
+
+		// Hook: Without this, main-nav-elements keep active when selecting
+		// elements in pull-right-nav and vice-versa.
+		$('.nav .active').removeClass('active');
+
 		$(this).tab('show');
 	});
 	$('#startButton').click(function(event) {
 		$('.nav a[href="#music"]').tab('show');
 	});
-
-	/**
-	 * Initialize everything.
-	 */
-	Mixtape.authentication.onPageLoad();
-	Mixtape.query.initInputHandler();
-	Mixtape.playlist.init();
-	// Mixtape.server.checkStatus();
-	Mixtape.playlist.update.connect();
-});
+})

@@ -2,6 +2,7 @@ package ch.hsr.mixtape.webapp.controller;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,12 +18,14 @@ import org.atmosphere.websocket.WebSocketEventListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomCollectionEditor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,6 +41,7 @@ import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.model.PlaylistSettings;
+import ch.hsr.mixtape.model.Song;
 import ch.hsr.mixtape.webapp.GUIException;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandler;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
@@ -53,6 +57,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(PlaylistController.class);
+
+	private static final String PLAYLIST_INITIALIZED_HEADER = "X-MixTape-isPlaylistInitialized";
 
 	private static final String ATMOSPHERE_PLAYLIST_PATH = "/playlist/push";
 
@@ -87,10 +93,31 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/create")
 	public ResponseEntity<String> createPlaylist(
 			HttpServletRequest request,
+			HttpServletResponse response,
 			Principal principal,
-			@ModelAttribute("playlistSettings") PlaylistSettings playlistSettings) {
+			@ModelAttribute("playlistSettings") PlaylistSettings playlistSettings)
+			throws GUIException, InvalidPlaylistException {
 		playlistService.createPlaylist(playlistSettings);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
+	}
+
+	/**
+	 * This {@link InitBinder} is needed for mapping selected songs in the
+	 * multiple-select-field to the actual instances of {@link Song} in the
+	 * {@link PlaylistSettings#startSongs} list.
+	 */
+	@InitBinder
+	protected void initBinder(HttpServletRequest request,
+			ServletRequestDataBinder binder) throws Exception {
+		binder.registerCustomEditor(List.class, new CustomCollectionEditor(
+				List.class) {
+			@Override
+			protected Object convertElement(Object element) {
+				String songId = (String) element;
+				return ApplicationFactory.getDatabaseService().findObjectById(
+						Integer.parseInt(songId), Song.class);
+			}
+		});
 	}
 
 	/**
@@ -105,14 +132,15 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/sort")
 	public ResponseEntity<String> sortPlaylist(HttpServletRequest request,
-			Principal principal, @RequestParam(value = "songId") long songId,
+			HttpServletResponse response, Principal principal,
+			@RequestParam(value = "songId") int songId,
 			@RequestParam(value = "oldPosition") int oldPosition,
 			@RequestParam(value = "newPosition") int newPosition)
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
 		playlistService.alterSorting(songId, oldPosition, newPosition);
-		notifyPlaylistSubscribers(request, principal);
+		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -128,13 +156,14 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@PreAuthorize("isAuthenticated and hasRole('ROLE_ADMIN')")
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/remove")
 	public ResponseEntity<String> removeSong(HttpServletRequest request,
-			Principal principal, @RequestParam(value = "songId") long songId,
+			HttpServletResponse response, Principal principal,
+			@RequestParam(value = "songId") int songId,
 			@RequestParam(value = "songPosition") int songPosition)
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
 		playlistService.removeSong(songId, songPosition);
-		notifyPlaylistSubscribers(request, principal);
+		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -148,11 +177,12 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@RequestMapping(method = RequestMethod.POST, value = "/playlist/wish")
 	public @ResponseBody
 	ResponseEntity<String> addWish(HttpServletRequest request,
-			Principal principal, @RequestParam(value = "songId") long songId)
+			HttpServletResponse response, Principal principal,
+			@RequestParam(value = "songId") int songId)
 			throws InvalidPlaylistException, GUIException {
 
 		playlistService.addWish(songId);
-		notifyPlaylistSubscribers(request, principal);
+		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -199,6 +229,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 		resource.addEventListener(new WebSocketEventListenerAdapter());
 
 		response.setContentType("text/html;charset=UTF-8");
+		setPlaylistInitializedHeader(response);
 
 		Broadcaster broadcaster = lookupBroadcaster(request.getPathInfo());
 		resource.setBroadcaster(broadcaster);
@@ -223,27 +254,33 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 * @throws GUIException
 	 */
 	private void notifyPlaylistSubscribers(HttpServletRequest request,
-			Principal principal) throws InvalidPlaylistException, GUIException {
+			HttpServletResponse response, Principal principal)
+			throws InvalidPlaylistException, GUIException {
 		final String errorMessage = "Notifying playlist subscribers failed: ";
 		try {
 			LOG.debug("Notifying playlist subscribers about an update.");
+
 			Broadcaster broadcaster = lookupBroadcaster(request.getPathInfo());
 
 			// http://stackoverflow.com/questions/9705293/render-multiple-views-within-a-single-request
 			View view = viewResolver.resolveViewName("playlist_viewhelper",
 					Locale.GERMAN);
 
-			ModelAndView playlistView = new ModelAndView(view, "playlist",
-					playlistService.getPlaylist());
+			ModelAndView playlistView = new ModelAndView(view);
+			try {
+				playlistView.addObject("playlist",
+						playlistService.getPlaylist());
+			} catch (InvalidPlaylistException e) {
+				playlistView.addObject("noPlaylist", true);
+			}
 
 			if (principal != null)
 				playlistView.addObject("isAuthenticated", true);
-
-			MockHttpServletResponse mockResponse = new MockHttpServletResponse();
 			playlistView.getView().render(playlistView.getModel(), request,
-					mockResponse);
+					response);
+			setPlaylistInitializedHeader(response);
 
-			broadcaster.broadcast(mockResponse.getContentAsString());
+			broadcaster.broadcast(response);
 		} catch (UnsupportedEncodingException e) {
 			throw new GUIException(errorMessage + "Content could not be "
 					+ "retrieved from mock response.", e);
@@ -276,10 +313,17 @@ public class PlaylistController implements MixtapeExceptionHandling {
 		}
 	}
 
+	private void setPlaylistInitializedHeader(HttpServletResponse response) {
+		response.setHeader(PLAYLIST_INITIALIZED_HEADER, Boolean
+				.toString(ApplicationFactory.getPlaylistService()
+						.isPlaylistInitialized()));
+	}
+
 	@Override
 	@ExceptionHandler(Exception.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<String> handleException(Exception e) {
+	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
+	public @ResponseBody
+	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
 	}
 

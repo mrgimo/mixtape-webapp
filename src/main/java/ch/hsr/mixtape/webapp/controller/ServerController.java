@@ -31,6 +31,8 @@ import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
 @Controller
 public class ServerController implements MixtapeExceptionHandling {
 
+	private static final String IS_SCANNING_DIR_HEADER = "X-MixTape-isScanning";
+
 	private static final Logger LOG = LoggerFactory
 			.getLogger(ServerController.class);
 
@@ -55,11 +57,11 @@ public class ServerController implements MixtapeExceptionHandling {
 	public ResponseEntity<String> scanMusicDirectory(
 			HttpServletResponse response) {
 		if (SYSTEM_SERVICE.scanMusicDirectory()) {
-			response.setHeader("X-AJAX-mixtape-isScanning", "true");
+			response.setHeader(IS_SCANNING_DIR_HEADER, "true");
 			return ControllerUtils.getResponseEntity(HttpStatus.OK,
 					(new HashMap<String, String>()).put("isScanning", "true"));
 		} else {
-			response.setHeader("X-AJAX-mixtape-isScanning", "false");
+			response.setHeader(IS_SCANNING_DIR_HEADER, "false");
 			return ControllerUtils.getResponseEntity(HttpStatus.BAD_REQUEST,
 					(new HashMap<String, String>()).put("isScanning", "false"));
 		}
@@ -71,7 +73,7 @@ public class ServerController implements MixtapeExceptionHandling {
 			HttpServletResponse response) {
 		String is = SYSTEM_SERVICE.isScanningMusicDirectory() ? "true"
 				: "false";
-		response.setHeader("X-AJAX-mixtape-isScanning", is);
+		response.setHeader(IS_SCANNING_DIR_HEADER, is);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK,
 				(new HashMap<String, String>()).put("isScanning", is));
 	}
@@ -79,7 +81,8 @@ public class ServerController implements MixtapeExceptionHandling {
 	@Override
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<String> handleException(Exception e) {
+	public @ResponseBody
+	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
 	}
 

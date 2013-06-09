@@ -136,11 +136,9 @@ window.Mixtape.server.getStatistics = function() {
 			$('#systemStatusContainer').html(PlainObjectData);
 			setTimeout(Mixtape.server.getStatistics,
 					serverStatisticsFetchInterval);
-			return true;
 		},
 		error : function(jqXHR, textStatus, errorThrown) {
 			if (jqXHR.status == "401") {
-				console.log("NOT  AUTHORIZED!");
 				Mixtape.authentication.showLoginForm(this);
 				return;
 			}
@@ -148,7 +146,6 @@ window.Mixtape.server.getStatistics = function() {
 			Mixtape.modal.displayError(jqXHR);
 			setTimeout(Mixtape.server.getStatistics,
 					serverStatisticsFetchInterval);
-			return false;
 		}
 	});
 };
@@ -164,13 +161,12 @@ window.Mixtape.server.musicDirectory = {
 					cache : false,
 					success : function(PlainObjectData, textStatus, jqXHR) {
 						var result = jqXHR
-								.getResponseHeader("X-AJAX-mixtape-isScanning");
+								.getResponseHeader("X-MixTape-isScanning");
 						if (result === "true")
 							Mixtape.server.musicDirectory.isScanningDirectory();
 					},
 					error : function(jqXHR, textStatus, errorThrown) {
 						if (jqXHR.status == "401") {
-							console.log("NOT  AUTHORIZED!");
 							Mixtape.authentication.showLoginForm(this);
 							return;
 						}
@@ -189,8 +185,7 @@ window.Mixtape.server.musicDirectory = {
 			url : document.location.pathname + 'server/isScanningDirectory',
 			cache : false,
 			success : function(PlainObjectData, textStatus, jqXHR) {
-				var result = jqXHR
-						.getResponseHeader("X-AJAX-mixtape-isScanning");
+				var result = jqXHR.getResponseHeader("X-MixTape-isScanning");
 				if (result === "false") {
 					Mixtape.server.musicDirectory.enableBtn();
 					return;
@@ -202,7 +197,6 @@ window.Mixtape.server.musicDirectory = {
 			},
 			error : function(jqXHR, textStatus, errorThrown) {
 				if (jqXHR.status == "401") {
-					console.log("NOT  AUTHORIZED!");
 					Mixtape.authentication.showLoginForm(this);
 					return;
 				}
@@ -225,9 +219,9 @@ window.Mixtape.server.musicDirectory = {
  * Additional playlist functionality after login.
  */
 // Overwrite existing init-function.
-window.Mixtape.playlist.init = function() {
+window.Mixtape.playlist.initAuthenticated = function() {
+	Mixtape.playlist.init();
 	Mixtape.playlist.initTooltips();
-	Mixtape.playlist.initSortHandler();
 	Mixtape.playlist.initRemoveSongHandler();
 }
 window.Mixtape.playlist.sort = function(songId, oldPosition, newPosition) {
@@ -252,13 +246,10 @@ window.Mixtape.playlist.initSortHandler = function() {
 	$('#playlist tbody').sortable({
 		start : function(event, ui) {
 			songId = $(ui.item).find('input').val();
-			console.log('songId: ' + songId);
 			oldPosition = ui.item.index();
-			console.log('oldPosition: ' + oldPosition);
 		},
 		stop : function(event, ui) {
 			if (ui.item.index() !== oldPosition) {
-				console.log('newPosition: ' + ui.item.index());
 				Mixtape.playlist.sort(songId, oldPosition, ui.item.index());
 			}
 		}
@@ -337,6 +328,24 @@ window.Mixtape.playlistSettings = {
 	placeholder : $('#playlistSettingsSelectedSongs ul:first').html().trim(),
 	initialSliderValue : 30,
 	init : function() {
+		var $form = $('form#playlistSettings');
+		$form.submit(function(event) {
+			event.preventDefault();
+			$.ajax({
+				url : $form.attr('action'),
+				type : 'POST',
+				data : $form.serialize(),
+				cache : false,
+				success : function(PlainObjectData, textStatus, jqXHR) {
+					console.log('Success creating playlist.');
+					('.nav a[href="#music"]').tab('show');
+				},
+				error : function(jqXHR, textStatus, errorThrown) {
+					Mixtape.modal.displayError(jqXHR);
+				}
+			});
+		});
+
 		$('#playlistSettings input[type=reset]').click(function() {
 			Mixtape.playlistSettings.reset();
 		});
@@ -378,6 +387,7 @@ window.Mixtape.playlistSettings = {
 
 		$('#playlistSettingsSelectedSongs li').each(function(index) {
 			$('.playlistSettingsSongSelect').append($('<option>', {
+				selected : 'selected',
 				value : $(this).find('input').val()
 			}));
 		});
@@ -388,10 +398,10 @@ window.Mixtape.playlistSettings = {
 		$('#playlistSettingsSelectedSongs ul').html(this.placeholder);
 
 		$('#startLengthInMinutes').change(function() {
-			$('#startLengthInSongs').val('');
+			$('#startLengthInSongs').val('0');
 		});
 		$('#startLengthInSongs').change(function() {
-			$('#startLengthInMinutes').val('');
+			$('#startLengthInMinutes').val('0');
 		})
 
 		$('.slider').slider(
@@ -409,26 +419,6 @@ window.Mixtape.playlistSettings = {
 				});
 		$('.slider-container .valueLabel').text(this.initialSliderValue);
 		$('.slider-container input[type=hidden]').val(this.initialSliderValue);
-	},
-	onSubmit : function() {
-		$('form#playlistSettings').submit(
-				function(event) {
-					$('form#playlistSettings input[name=term]').attr(
-							"disabled", "disabled");
-					event.preventDefault();
-					$.ajax({
-						url : document.location.pathname + 'playlist/create',
-						type : 'POST',
-						data : $('form#playlistSettings').serialize(),
-						cache : false,
-						success : function(PlainObjectData, textStatus, jqXHR) {
-							console.log('Success sorting.');
-						},
-						error : function(jqXHR, textStatus, errorThrown) {
-							Mixtape.modal.displayError(jqXHR);
-						}
-					});
-				});
 	}
 };
 
@@ -553,7 +543,7 @@ $(document).ready(function() {
 	/**
 	 * Initialize additional functionality.
 	 */
-	Mixtape.playlist.init();
+	Mixtape.playlist.initAuthenticated();
 	Mixtape.playlistSettings.init();
 	// Mixtape.server.getStatistics();
 	// if (!window.Uint8Array)

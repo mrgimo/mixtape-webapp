@@ -21,6 +21,7 @@ import org.springframework.web.servlet.ViewResolver;
 
 import ch.hsr.mixtape.application.service.ApplicationFactory;
 import ch.hsr.mixtape.application.service.StreamSubscriber;
+import ch.hsr.mixtape.webapp.ByteArrayToBase64TypeAdapter;
 import ch.hsr.mixtape.webapp.NoOpView;
 
 import com.google.gson.Gson;

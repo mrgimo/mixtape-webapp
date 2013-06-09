@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,17 +41,20 @@ public class StartpageController implements MixtapeExceptionHandling {
 
 	/**
 	 * This is the handling method for homepage calls.
+	 * 
+	 * @throws InvalidPlaylistException
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/")
-	public ModelAndView start(HttpServletRequest request, Principal principal) {
+	public ModelAndView start(HttpServletRequest request, Principal principal)
+			throws InvalidPlaylistException {
 		ModelMap model = new ModelMap();
 
 		model.addAttribute("loginIncludeCancel", true);
-		try {
+
+		if (PLAYLIST_SERVICE.isPlaylistInitialized())
 			model.addAttribute("playlist", PLAYLIST_SERVICE.getPlaylist());
-		} catch (InvalidPlaylistException e) {
-			model.addAttribute("playlist", null);
-		}
+		else
+			model.addAttribute("noPlaylist", true);
 
 		model.addAttribute("queriedSongs", new ArrayList<Song>());
 
@@ -79,7 +81,7 @@ public class StartpageController implements MixtapeExceptionHandling {
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public @ResponseBody
-	ResponseEntity<String> handleException(Exception e) {
+	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
 	}
 

@@ -4,14 +4,19 @@
 <table class="table table-hover">
 	<tbody>
 		<c:choose>
-			<c:when test="${empty playlist}">
+			<c:when test="${noPlaylist}">
+				<tr>
+					<td>Derzeit steht keine Wiedergabeliste bereit.</td>
+				</tr>
+			</c:when>
+			<c:when test="${empty playlist or empty playlist.items}">
 				<tr>
 					<td>Die Wiedergabeliste ist derzeit leer.</td>
 				</tr>
 			</c:when>
-			<c:when test="${not empty playlist}">
-				<c:forEach items="${playlist.item}" var="item">
-					<tr>
+			<c:otherwise>
+				<c:forEach items="${playlist.items}" var="item">
+					<tr class="playlistItem">
 						<td class="tooltip" data-toggle="tooltip"><c:choose>
 								<c:when test="${not empty item.antecessor}">
 									<i class="icon-tasks"></i>
@@ -66,7 +71,7 @@
 							</c:if></td>
 					</tr>
 				</c:forEach>
-			</c:when>
+			</c:otherwise>
 		</c:choose>
 	</tbody>
 </table>
