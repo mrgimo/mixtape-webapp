@@ -62,7 +62,7 @@ public class StartpageController implements MixtapeExceptionHandling {
 			model.addAttribute("isAuthenticated", true);
 
 			model.addAttribute("systemstatus", ApplicationFactory
-					.getSystemService().getSystemStatus());
+					.getServerService().getSystemStatus());
 
 			try {
 				model.addAttribute("playlistSettings",

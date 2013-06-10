@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import ch.hsr.mixtape.application.service.ApplicationFactory;
-import ch.hsr.mixtape.application.service.SystemService;
+import ch.hsr.mixtape.application.service.ServerService;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandler;
 import ch.hsr.mixtape.webapp.MixtapeExceptionHandling;
 
@@ -36,8 +36,8 @@ public class ServerController implements MixtapeExceptionHandling {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(ServerController.class);
 
-	private static final SystemService SYSTEM_SERVICE = ApplicationFactory
-			.getSystemService();
+	private static final ServerService SYSTEM_SERVICE = ApplicationFactory
+			.getServerService();
 
 	@PreAuthorize("permitAll")
 	@RequestMapping(method = RequestMethod.GET, value = "/server/checkStatus")
