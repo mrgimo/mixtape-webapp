@@ -44,11 +44,6 @@
 					</tr>
 				</tbody>
 			</table>
-			<div id="scanMusicDirectory">
-				<a href="#" class="btn btn-primary btn-mini">Musikverzeichnis
-					neu einlesen</a> <span class="label label-warning hide">Das
-					Musikverzeichnis wird gerade eingelesen.</span>
-			</div>
 
 			<h3>Analyse-Fortschritt</h3>
 			<div id="systemStatusAnalysisProgress">

@@ -107,7 +107,12 @@
 						<h2>Systemstatus</h2>
 						<h3>Systemübersicht</h3>
 						<p class="text-info">Diese Anzeige aktualisiert sich
-							automatisch alle 5 Sekunden.</p>
+							automatisch alle 10 Sekunden.</p>
+						<div id="scanMusicDirectory">
+							<a href="#" class="btn btn-primary btn-mini">Musikverzeichnis
+								neu einlesen</a> <span class="label label-warning hide">Das
+								Musikverzeichnis wird gerade eingelesen.</span>
+						</div>
 						<div id="systemStatusContainer">
 							<%@ include file="/WEB-INF/views/systemstatus_viewhelper.jsp"%>
 						</div>
@@ -168,7 +173,7 @@
 		<script src="<c:url value="/resources/js/jquery-1.9.1.js" />"></script>
 		<%-- <script
 			src="<c:url value="/resources/js/jquery-ui-1.10.3.custom.min.js" />"></script> --%>
-			 <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 		<script
 			src="<c:url value="/resources/js/jquery-ui.touch-punch.min.js" />"></script>
 		<script src="<c:url value="/resources/js/bootstrap.min.js" />"></script>
