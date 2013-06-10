@@ -123,9 +123,9 @@ function base64_decode(data) {
 	return dec;
 }
 
-window.Mixtape.serverStatisticsFetchInterval = 5000;
-
 window.Mixtape.modal.isDisplayingError = false;
+
+window.Mixtape.server.statisticsFetchInterval = 10000;
 
 window.Mixtape.server.getStatistics = function() {
 	$.ajax({
@@ -135,7 +135,7 @@ window.Mixtape.server.getStatistics = function() {
 			console.log("Retrieved server statistics.");
 			$('#systemStatusContainer').html(PlainObjectData);
 			setTimeout(Mixtape.server.getStatistics,
-					serverStatisticsFetchInterval);
+					Mixtape.server.statisticsFetchInterval);
 		},
 		error : function(jqXHR, textStatus, errorThrown) {
 			if (jqXHR.status == "401") {
@@ -145,7 +145,7 @@ window.Mixtape.server.getStatistics = function() {
 			console.log("Error while retrieving server statistics.");
 			Mixtape.modal.displayError(jqXHR);
 			setTimeout(Mixtape.server.getStatistics,
-					serverStatisticsFetchInterval);
+					Mixtape.server.statisticsFetchInterval);
 		}
 	});
 };
@@ -545,9 +545,7 @@ $(document).ready(function() {
 	 */
 	Mixtape.playlist.initAuthenticated();
 	Mixtape.playlistSettings.init();
-	// Mixtape.server.getStatistics();
-	// if (!window.Uint8Array)
-	// registerUint8Array();
+//	Mixtape.server.getStatistics();
 
 	$('#scanMusicDirectory a').click(function(event) {
 		Mixtape.server.musicDirectory.scan();
@@ -555,5 +553,7 @@ $(document).ready(function() {
 });
 
 window.addEventListener('load', function(e) {
+	// if (!window.Uint8Array)
+	// registerUint8Array();
 	// Mixtape.streaming.connect();
 });
