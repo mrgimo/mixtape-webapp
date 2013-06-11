@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomCollectionEditor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -293,11 +294,13 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 			if (principal != null)
 				playlistView.addObject("isAuthenticated", true);
-			playlistView.getView().render(playlistView.getModel(), request,
-					response);
-			setPlaylistInitializedHeader(response);
 
-			broadcaster.broadcast(response);
+			MockHttpServletResponse mockResponse = new MockHttpServletResponse();
+			playlistView.getView().render(playlistView.getModel(), request,
+					mockResponse);
+			setPlaylistInitializedHeader(mockResponse);
+
+			broadcaster.broadcast(mockResponse.getContentAsString());
 		} catch (UnsupportedEncodingException e) {
 			throw new GUIException(errorMessage + "Content could not be "
 					+ "retrieved from mock response.", e);

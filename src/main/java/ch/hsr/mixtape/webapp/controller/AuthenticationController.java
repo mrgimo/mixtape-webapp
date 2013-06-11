@@ -38,9 +38,7 @@ public class AuthenticationController implements MixtapeExceptionHandling {
 			modelAndView.addObject("loginIncludeCancel", false);
 			return modelAndView;
 		} else {
-			System.err.println("Requesting Normal Login");
 			modelAndView.addObject("loginIncludeCancel", false);
-
 			if (request.getParameter("loginFailed") != null) {
 				modelAndView.addObject("loginFailed", true);
 			} else if (request.getParameter("timeout") != null) {

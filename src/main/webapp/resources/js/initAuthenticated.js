@@ -219,8 +219,8 @@ window.Mixtape.server.musicDirectory = {
  * Additional playlist functionality after login.
  */
 // Overwrite existing init-function.
-window.Mixtape.playlist.initAuthenticated = function() {
-	Mixtape.playlist.init();
+window.Mixtape.playlist.initAuthenticated = function(isPlaylistInitialized) {
+	Mixtape.playlist.init(isPlaylistInitialized);
 	Mixtape.playlist.initTooltips();
 	Mixtape.playlist.initSortHandler();
 	Mixtape.playlist.initRemoveSongHandler();

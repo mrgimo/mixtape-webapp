@@ -388,9 +388,11 @@ window.Mixtape = {
 				},
 				onMessage : function(response) {
 					console.log('Atmosphere message received.');
-					var isPlaylistInitialized = response.headers['X-MixTape-isPlaylistInitialized'] === "true";
 					$('#playlist').html(response.responseBody);
-					Mixtape.playlist.init(isPlaylistInitialized);
+					if (Mixtape.playlist.initAuthenticated !== undefined)
+						Mixtape.playlist.initAuthenticated(true);
+					else
+						Mixtape.playlist.init(true);
 				},
 				onClose : function(response) {
 					console.log('Atmosphere disconnected.');
