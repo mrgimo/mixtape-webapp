@@ -342,6 +342,9 @@
 				<version>2.1</version>
 				<configuration>
 					<path>/mixtape</path>
+					<systemProperties>
+						<JAVA_OPTS>-Xms256m -Xmx30720m</JAVA_OPTS>
+					</systemProperties>
 				</configuration>
 			</plugin>
 			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>exec-maven-plugin</artifactId> 
