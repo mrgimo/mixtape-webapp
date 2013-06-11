@@ -331,6 +331,10 @@ window.Mixtape.playlistSettings = {
 		var $form = $('form#playlistSettings');
 		$form.submit(function(event) {
 			event.preventDefault();
+			
+			if (('form#playlistSettings input[type=term]').is(':focus'))
+				return;
+
 			$.ajax({
 				url : $form.attr('action'),
 				type : 'POST',
