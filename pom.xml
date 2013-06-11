@@ -343,7 +343,7 @@
 				<configuration>
 					<path>/mixtape</path>
 					<systemProperties>
-						<JAVA_OPTS>-Xms256m -Xmx30720m</JAVA_OPTS>
+						<JAVA_OPTS>-Xms256m -Xmx30720m -DmixtapeData=/opt/mixtapeData -DmixtapeLogLevel=DEBUG -DmixtapeMusicDir=/opt/audio_smallDir</JAVA_OPTS>
 					</systemProperties>
 				</configuration>
 			</plugin>
