@@ -331,8 +331,8 @@ window.Mixtape.playlistSettings = {
 		var $form = $('form#playlistSettings');
 		$form.submit(function(event) {
 			event.preventDefault();
-			
-			if ($('form#playlistSettings input[type=term]').is(':focus'))
+
+			if ($('form#playlistSettings input[name=term]').is(':focus'))
 				return;
 
 			$.ajax({
@@ -368,13 +368,13 @@ window.Mixtape.playlistSettings = {
 			},
 			stop : function(event, ui) {
 				var listSize = $('#playlistSettingsSelectedSongs li').length;
-				if (listSize > 1) {
+				if (listSize >= 1) {
 					$('.ul-placeholder').remove();
-					Mixtape.playlistSettings.updateSelectContainer(listSize);
+					Mixtape.playlistSettings.updateSelectContainer();
 				} else if (listSize == 0) {
 					var placeholder = Mixtape.playlistSettings.placeholder;
 					$('#playlistSettingsSelectedSongs ul').html(placeholder);
-					Mixtape.playlistSettings.updateSelectContainer(listSize);
+					Mixtape.playlistSettings.updateSelectContainer();
 				} else {
 					$('.ul-placeholder').show();
 				}
@@ -383,14 +383,16 @@ window.Mixtape.playlistSettings = {
 		});
 		$('#playlistSettings ul').disableSelection();
 	},
-	updateSelectContainer : function(listSize) {
-		$('.playlistSettingsSongSelect').html('');
+	updateSelectContainer : function() {
+		$('.playlistSettingsSongSelect select').html('');
 
-		if (listSize <= 1)
+		if ($('#playlistSettingsSelectedSongs li').length <= 1
+				&& $('#playlistSettingsSelectedSongs li.ul-placeholder').length !== 0) {
 			return;
+		}
 
 		$('#playlistSettingsSelectedSongs li').each(function(index) {
-			$('.playlistSettingsSongSelect').append($('<option>', {
+			$('.playlistSettingsSongSelect select').append($('<option>', {
 				selected : 'selected',
 				value : $(this).find('input').val()
 			}));
@@ -400,6 +402,7 @@ window.Mixtape.playlistSettings = {
 		$('#playlistSettings ul').html('');
 		$('#playlistSettingsQueryResults ul').html(this.resultPlaceholder);
 		$('#playlistSettingsSelectedSongs ul').html(this.placeholder);
+		this.updateSelectContainer();
 
 		$('#startLengthInMinutes').change(function() {
 			$('#startLengthInSongs').val('0');

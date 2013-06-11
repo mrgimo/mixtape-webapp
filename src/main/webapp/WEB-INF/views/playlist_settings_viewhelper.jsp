@@ -27,10 +27,10 @@
 					</ul>
 				</div>
 			</div>
-			<form:select path="startSongs" class="playlistSettingsSongSelect"
-				multiple="true" itemLabel="title" itemValue="id">
-				<form:options items="${startSongs}" />
-			</form:select>
+			<div class="playlistSettingsSongSelect hidden">
+				<form:select path="startSongs" multiple="multiple" itemValue="id"
+					items="${startSongs}" />
+			</div>
 		</div>
 	</div>
 

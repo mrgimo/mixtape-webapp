@@ -1,5 +1,8 @@
 package ch.hsr.mixtape.webapp.controller;
 
+import static ch.hsr.mixtape.application.ApplicationFactory.getPlaylistService;
+import static ch.hsr.mixtape.application.ApplicationFactory.getServerService;
+
 import java.security.Principal;
 import java.util.ArrayList;
 
@@ -17,8 +20,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import ch.hsr.mixtape.application.ApplicationFactory;
-import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.model.PlaylistSettings;
 import ch.hsr.mixtape.model.Song;
@@ -36,9 +37,6 @@ public class StartpageController implements MixtapeExceptionHandling {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(StartpageController.class);
 
-	private static final PlaylistService PLAYLIST_SERVICE = ApplicationFactory
-			.getPlaylistService();
-
 	/**
 	 * This is the handling method for homepage calls.
 	 * 
@@ -51,8 +49,8 @@ public class StartpageController implements MixtapeExceptionHandling {
 
 		model.addAttribute("loginIncludeCancel", true);
 
-		if (PLAYLIST_SERVICE.isPlaylistInitialized())
-			model.addAttribute("playlist", PLAYLIST_SERVICE.getPlaylist());
+		if (getPlaylistService().isPlaylistInitialized())
+			model.addAttribute("playlist", getPlaylistService().getPlaylist());
 		else
 			model.addAttribute("noPlaylist", true);
 
@@ -61,12 +59,12 @@ public class StartpageController implements MixtapeExceptionHandling {
 		if (principal != null) {
 			model.addAttribute("isAuthenticated", true);
 
-			model.addAttribute("systemstatus", ApplicationFactory
-					.getServerService().getSystemStatus());
+			model.addAttribute("systemstatus", getServerService()
+					.getSystemStatus());
 
 			try {
-				model.addAttribute("playlistSettings",
-						PLAYLIST_SERVICE.getPlaylistSettings());
+				model.addAttribute("playlistSettings", getPlaylistService()
+						.getPlaylistSettings());
 			} catch (InvalidPlaylistException e) {
 				model.addAttribute("playlistSettings", new PlaylistSettings());
 			}

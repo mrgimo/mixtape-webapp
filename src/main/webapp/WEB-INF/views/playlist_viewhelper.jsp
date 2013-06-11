@@ -32,24 +32,24 @@
 											<div class='progress'>
 												<div class='bar' style='width: ${item.total}%;'></div>
 											</div>
-											<small>Harmonisch: <span class='valueLabel'>${item.harmonic}%</span></small>
+											<small>Harmonisch: <span class='valueLabel'>${item.harmonicSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${song.harmonic}%;'></div>
+												<div class='bar' style='width: ${song.harmonicSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Wahrnehmend: <span class='valueLabel'>${item.perceptual}%</span></small>
+											<small>Wahrnehmend: <span class='valueLabel'>${item.perceptualSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${item.perceptual}%;'></div>
+												<div class='bar' style='width: ${item.perceptualSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Spektral: <span class='valueLabel'>${song.spectral}%</span></small>
+											<small>Spektral: <span class='valueLabel'>${song.spectralSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${item.spectral}%;'></div>
+												<div class='bar' style='width: ${item.spectralSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Rhythmisch: <span class='valueLabel'>${item.temporal}%</span></small>
+											<small>Rhythmisch: <span class='valueLabel'>${item.temporalSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${item.temporal}%;'></div>
+												<div class='bar' style='width: ${item.temporalSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
 										</div>

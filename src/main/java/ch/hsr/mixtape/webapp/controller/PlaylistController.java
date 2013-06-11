@@ -1,5 +1,8 @@
 package ch.hsr.mixtape.webapp.controller;
 
+import static ch.hsr.mixtape.application.ApplicationFactory.getPlaylistService;
+import static ch.hsr.mixtape.application.ApplicationFactory.getQueryService;
+
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.List;
@@ -36,8 +39,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
-import ch.hsr.mixtape.application.ApplicationFactory;
-import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.model.PlaylistSettings;
@@ -65,9 +66,6 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@Autowired
 	private ViewResolver viewResolver;
 
-	private PlaylistService playlistService = ApplicationFactory
-			.getPlaylistService();
-
 	/**
 	 * @param term
 	 * @return songquery_viewhelper view
@@ -78,8 +76,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@RequestParam("term") String term,
 			@RequestParam(value = "maxResults", defaultValue = "0") int maxResults) {
 		return new ModelAndView("songquery_viewhelper", "queriedSongs",
-				ApplicationFactory.getQueryService().findSongsByTerm(term,
-						maxResults));
+				getQueryService().findSongsByTerm(term, maxResults));
 	}
 
 	/**
@@ -97,7 +94,18 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			Principal principal,
 			@ModelAttribute("playlistSettings") PlaylistSettings playlistSettings)
 			throws GUIException, InvalidPlaylistException {
-		playlistService.createPlaylist(playlistSettings);
+
+		/*
+		 * Really dirty hack just made because error not found and not enought
+		 * time to fix the issue. Somehow Spring puts the first startSongs-entry
+		 * twice (once at the beginning and once at the end of the list) if the
+		 * list has more than one element.
+		 */
+		if (playlistSettings.getStartSongs().size() > 1)
+			playlistSettings.getStartSongs().remove(
+					playlistSettings.getStartSongs().size() - 1);
+
+		getPlaylistService().createPlaylist(playlistSettings);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -114,7 +122,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@Override
 			protected Object convertElement(Object element) {
 				String songId = (String) element;
-				return ApplicationFactory.getQueryService().findObjectById(
+				return getQueryService().findObjectById(
 						Integer.parseInt(songId), Song.class);
 			}
 		});
@@ -139,7 +147,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
-		playlistService.alterSorting(songId, oldPosition, newPosition);
+		getPlaylistService().alterSorting(songId, oldPosition, newPosition);
 		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
@@ -162,7 +170,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
-		playlistService.removeSong(songId, songPosition);
+		getPlaylistService().removeSong(songId, songPosition);
 		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
@@ -181,7 +189,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@RequestParam(value = "songId") int songId)
 			throws InvalidPlaylistException, GUIException {
 
-		playlistService.addWish(songId);
+		getPlaylistService().addWish(songId);
 		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
@@ -268,8 +276,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 			ModelAndView playlistView = new ModelAndView(view);
 			try {
-				playlistView.addObject("playlist",
-						playlistService.getPlaylist());
+				playlistView.addObject("playlist", getPlaylistService()
+						.getPlaylist());
 			} catch (InvalidPlaylistException e) {
 				playlistView.addObject("noPlaylist", true);
 			}
@@ -314,9 +322,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	}
 
 	private void setPlaylistInitializedHeader(HttpServletResponse response) {
-		response.setHeader(PLAYLIST_INITIALIZED_HEADER, Boolean
-				.toString(ApplicationFactory.getPlaylistService()
-						.isPlaylistInitialized()));
+		response.setHeader(PLAYLIST_INITIALIZED_HEADER,
+				Boolean.toString(getPlaylistService().isPlaylistInitialized()));
 	}
 
 	@Override
