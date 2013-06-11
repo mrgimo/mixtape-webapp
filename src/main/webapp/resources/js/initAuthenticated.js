@@ -222,6 +222,7 @@ window.Mixtape.server.musicDirectory = {
 window.Mixtape.playlist.initAuthenticated = function() {
 	Mixtape.playlist.init();
 	Mixtape.playlist.initTooltips();
+	Mixtape.playlist.initSortHandler();
 	Mixtape.playlist.initRemoveSongHandler();
 }
 window.Mixtape.playlist.sort = function(songId, oldPosition, newPosition) {
@@ -342,7 +343,7 @@ window.Mixtape.playlistSettings = {
 				cache : false,
 				success : function(PlainObjectData, textStatus, jqXHR) {
 					console.log('Success creating playlist.');
-					('.nav a[href="#music"]').tab('show');
+					$('.nav a[href="#music"]').tab('show');
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
 					Mixtape.modal.displayError(jqXHR);

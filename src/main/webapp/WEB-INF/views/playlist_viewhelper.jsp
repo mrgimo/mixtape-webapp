@@ -34,7 +34,7 @@
 											</div>
 											<small>Harmonisch: <span class='valueLabel'>${item.harmonicSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${song.harmonicSimilarity}%;'></div>
+												<div class='bar' style='width: ${item.harmonicSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
 											<small>Wahrnehmend: <span class='valueLabel'>${item.perceptualSimilarity}%</span></small>
@@ -42,7 +42,7 @@
 												<div class='bar' style='width: ${item.perceptualSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
-											<small>Spektral: <span class='valueLabel'>${song.spectralSimilarity}%</span></small>
+											<small>Spektral: <span class='valueLabel'>${item.spectralSimilarity}%</span></small>
 											<div class='progress'>
 												<div class='bar' style='width: ${item.spectralSimilarity}%;'></div>
 											</div>

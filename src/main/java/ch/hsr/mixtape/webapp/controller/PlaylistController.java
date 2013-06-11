@@ -5,8 +5,10 @@ import static ch.hsr.mixtape.application.ApplicationFactory.getQueryService;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +41,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
+import ch.hsr.mixtape.application.service.PlaylistSubscriber;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.model.PlaylistSettings;
@@ -54,7 +57,8 @@ import ch.hsr.mixtape.webapp.NoOpView;
  * @author Stefan Derungs
  */
 @Controller
-public class PlaylistController implements MixtapeExceptionHandling {
+public class PlaylistController implements MixtapeExceptionHandling,
+		PlaylistSubscriber {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(PlaylistController.class);
@@ -65,6 +69,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	@Autowired
 	private ViewResolver viewResolver;
+
+	private HashMap<AtmosphereResource, Principal> playlistSubscribers = new HashMap<AtmosphereResource, Principal>();
 
 	/**
 	 * @param term
@@ -208,13 +214,13 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 */
 	@PreAuthorize("permitAll")
 	@RequestMapping(value = ATMOSPHERE_PLAYLIST_PATH, method = RequestMethod.GET)
-	public ModelAndView subscribeToPlaylist(HttpServletRequest request)
-			throws Exception {
+	public ModelAndView subscribeToPlaylist(HttpServletRequest request,
+			Principal principal) throws Exception {
 		LOG.debug("Subscribing client to playlist updates.");
 		AtmosphereResource resource = (AtmosphereResource) request
 				.getAttribute(FrameworkConfig.ATMOSPHERE_RESOURCE);
 
-		registerClient(resource, request, resource.getResponse());
+		registerClient(resource, request, resource.getResponse(), principal);
 
 		// A NoOpView is returned to tell Spring Dispatcher framework not to
 		// render anything since it is all Atmosphere-related code.
@@ -224,6 +230,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	/**
 	 * Atmosphere: See AtmosphereHandlerPubSub example - same code as GET.
 	 * 
+	 * @param principal
+	 * 
 	 * @source `doGet` at [https
 	 *         ://github.com/Atmosphere/atmosphere-extensions/blob/master/spring
 	 *         /samples
@@ -231,7 +239,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 *         /PubSubController.java]
 	 */
 	private void registerClient(AtmosphereResource resource,
-			HttpServletRequest request, HttpServletResponse response) {
+			HttpServletRequest request, HttpServletResponse response,
+			Principal principal) {
 		LOG.debug("Registering client for playlist updates.");
 		// Log all events on the console, including WebSocket events.
 		resource.addEventListener(new WebSocketEventListenerAdapter());
@@ -248,6 +257,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 					Boolean.TRUE);
 		}
 		resource.suspend(-1);
+
+		playlistSubscribers.put(resource, principal);
 	}
 
 	/**
@@ -332,6 +343,19 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	public @ResponseBody
 	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
+	}
+
+	@Override
+	public void notifyPlaylistChanged() throws RuntimeException {
+		for (Entry<AtmosphereResource, Principal> subscriber : playlistSubscribers
+				.entrySet())
+			try {
+				notifyPlaylistSubscribers(subscriber.getKey().getRequest(),
+						subscriber.getKey().getResponse(),
+						subscriber.getValue());
+			} catch (InvalidPlaylistException | GUIException e) {
+				throw new RuntimeException(e.getMessage(), e);
+			}
 	}
 
 }

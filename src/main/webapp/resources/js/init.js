@@ -197,9 +197,6 @@ window.Mixtape = {
 					}
 				},
 				success : function(PlainObjectData, textStatus, jqXHR) {
-					console.log("REQUEST 1:");
-					console.debug(jqXHR);
-					return;
 					console.log("Received server status update.");
 					if ($('.modal h4').is(':visible'))
 						Mixtape.server.hideStatusAndReload();
@@ -444,7 +441,7 @@ $(document).ready(function() {
 	Mixtape.authentication.onPageLoad();
 	Mixtape.query.initAllQueryInputHandlers();
 	Mixtape.playlist.init();
-	// Mixtape.server.checkStatus();
+	Mixtape.server.checkStatus();
 	Mixtape.playlist.update.connect();
 });
 
