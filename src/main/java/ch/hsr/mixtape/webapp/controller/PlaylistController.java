@@ -8,7 +8,6 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,7 +40,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
-import ch.hsr.mixtape.application.service.PlaylistSubscriber;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.model.PlaylistSettings;
@@ -57,8 +55,7 @@ import ch.hsr.mixtape.webapp.NoOpView;
  * @author Stefan Derungs
  */
 @Controller
-public class PlaylistController implements MixtapeExceptionHandling,
-		PlaylistSubscriber {
+public class PlaylistController implements MixtapeExceptionHandling {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(PlaylistController.class);
@@ -112,6 +109,7 @@ public class PlaylistController implements MixtapeExceptionHandling,
 					playlistSettings.getStartSongs().size() - 1);
 
 		getPlaylistService().createPlaylist(playlistSettings);
+		notifyPlaylistSubscribers(request, response, principal);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -343,19 +341,6 @@ public class PlaylistController implements MixtapeExceptionHandling,
 	public @ResponseBody
 	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
-	}
-
-	@Override
-	public void notifyPlaylistChanged() throws RuntimeException {
-		for (Entry<AtmosphereResource, Principal> subscriber : playlistSubscribers
-				.entrySet())
-			try {
-				notifyPlaylistSubscribers(subscriber.getKey().getRequest(),
-						subscriber.getKey().getResponse(),
-						subscriber.getValue());
-			} catch (InvalidPlaylistException | GUIException e) {
-				throw new RuntimeException(e.getMessage(), e);
-			}
 	}
 
 }
