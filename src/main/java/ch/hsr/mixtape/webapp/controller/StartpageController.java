@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import ch.hsr.mixtape.application.service.ApplicationFactory;
+import ch.hsr.mixtape.application.ApplicationFactory;
 import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.model.PlaylistSettings;

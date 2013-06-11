@@ -545,7 +545,7 @@ $(document).ready(function() {
 	 */
 	Mixtape.playlist.initAuthenticated();
 	Mixtape.playlistSettings.init();
-//	Mixtape.server.getStatistics();
+	Mixtape.server.getStatistics();
 
 	$('#scanMusicDirectory a').click(function(event) {
 		Mixtape.server.musicDirectory.scan();

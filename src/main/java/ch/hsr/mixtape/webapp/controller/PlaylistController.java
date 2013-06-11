@@ -36,7 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
-import ch.hsr.mixtape.application.service.ApplicationFactory;
+import ch.hsr.mixtape.application.ApplicationFactory;
 import ch.hsr.mixtape.application.service.PlaylistService;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
@@ -114,7 +114,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@Override
 			protected Object convertElement(Object element) {
 				String songId = (String) element;
-				return ApplicationFactory.getDatabaseService().findObjectById(
+				return ApplicationFactory.getQueryService().findObjectById(
 						Integer.parseInt(songId), Song.class);
 			}
 		});

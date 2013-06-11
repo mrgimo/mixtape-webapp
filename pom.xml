@@ -217,21 +217,21 @@
 			<version>${slf4j.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${slf4j.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>${slf4j.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -251,11 +251,19 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+
 		<repository>
 			<id>EclipseLink</id>
 			<url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
 		</repository>
 	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>onejar-maven-plugin.googlecode.com</id>
+			<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<plugins>
@@ -268,6 +276,19 @@
 					<target>${java.version}</target>
 				</configuration>
 			</plugin>
+
+
+
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jar-plugin</artifactId> 
+				<configuration> <archive> <manifest> <mainClass>ch.hsr.mixtape.webapp.run.MixtapeWebappLauncher</mainClass> 
+				</manifest> </archive> </configuration> </plugin> <plugin> <groupId>org.dstovall</groupId> 
+				<artifactId>onejar-maven-plugin</artifactId> <version>1.4.4</version> <executions> 
+				<execution> <goals> <goal>one-jar</goal> </goals> <configuration> <onejarVersion>0.97</onejarVersion> 
+				<attachToBuild>true</attachToBuild> <classifier>onejar</classifier> </configuration> 
+				</execution> </executions> </plugin> -->
+
+
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -276,18 +297,15 @@
 					<execution>
 						<id>unpack-dependencies</id>
 						<phase>package</phase>
-						<!-- <phase>compile</phase> -->
 						<goals>
 							<goal>unpack-dependencies</goal>
 						</goals>
 						<configuration>
 							<includes>**/*.class</includes>
 							<excludes>**/*.properties</excludes>
-							<!-- <outputDirectory>${project.build.directory}/classes</outputDirectory> -->
 							<outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
 							<overWriteReleases>false</overWriteReleases>
 							<overWriteSnapshots>true</overWriteSnapshots>
-							<!-- <attach>true</attach> -->
 						</configuration>
 					</execution>
 				</executions>
@@ -303,15 +321,9 @@
 							<mainClass>ch.hsr.mixtape.webapp.run.MixtapeWebappLauncher</mainClass>
 						</manifest>
 					</archive>
-					<!-- <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes> -->
+					<packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
 					<attachClasses>true</attachClasses>
 					<outputDirectory>${project.build.directory}</outputDirectory>
-					<!-- <classesClassifier>classes</classesClassifier> -->
-
-					<!-- <webResources> <resource> <directory>src/main/webapp</directory> 
-						</resource> </webResources> -->
-					<!-- <warName>mixtape-webapp</warName> -->
-					<!-- <webXml>WebContent\WEB-INF\web.xml</webXml> -->
 				</configuration>
 			</plugin>
 			<plugin>
