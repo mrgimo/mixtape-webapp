@@ -5,7 +5,6 @@ import static ch.hsr.mixtape.application.ApplicationFactory.getQueryService;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -14,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.FrameworkConfig;
@@ -67,8 +67,6 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	@Autowired
 	private ViewResolver viewResolver;
-
-	private HashMap<AtmosphereResource, Principal> playlistSubscribers = new HashMap<AtmosphereResource, Principal>();
 
 	/**
 	 * @param term
@@ -219,7 +217,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 		AtmosphereResource resource = (AtmosphereResource) request
 				.getAttribute(FrameworkConfig.ATMOSPHERE_RESOURCE);
 
-		registerClient(resource, request, resource.getResponse(), principal);
+		registerClient(resource, request);
 
 		// A NoOpView is returned to tell Spring Dispatcher framework not to
 		// render anything since it is all Atmosphere-related code.
@@ -238,12 +236,12 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 *         /PubSubController.java]
 	 */
 	private void registerClient(AtmosphereResource resource,
-			HttpServletRequest request, HttpServletResponse response,
-			Principal principal) {
+			HttpServletRequest request) {
 		LOG.debug("Registering client for playlist updates.");
 		// Log all events on the console, including WebSocket events.
 		resource.addEventListener(new WebSocketEventListenerAdapter());
 
+		AtmosphereResponse response = resource.getResponse();
 		response.setContentType("text/html;charset=UTF-8");
 		setPlaylistInitializedHeader(response);
 
@@ -256,8 +254,6 @@ public class PlaylistController implements MixtapeExceptionHandling {
 					Boolean.TRUE);
 		}
 		resource.suspend(-1);
-
-		playlistSubscribers.put(resource, principal);
 	}
 
 	/**
@@ -292,6 +288,13 @@ public class PlaylistController implements MixtapeExceptionHandling {
 				playlistView.addObject("noPlaylist", true);
 			}
 
+			/*
+			 * TODO: This is a bug. The same content is streamed to all clients,
+			 * i.e. if request came from an admin, principal will not be null
+			 * and so normal clients will have more rights in the GUI. The
+			 * opposite also holds - if the request came from an unauthenticated
+			 * user, logged in admins will have less functionality in the GUI.
+			 */
 			if (principal != null)
 				playlistView.addObject("isAuthenticated", true);
 
