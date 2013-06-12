@@ -327,7 +327,6 @@ window.Mixtape.playlistSettings = {
 	resultPlaceholder : $('#playlistSettingsQueryResults ul:first').html()
 			.trim(),
 	placeholder : $('#playlistSettingsSelectedSongs ul:first').html().trim(),
-	initialSliderValue : 30,
 	init : function() {
 		var $form = $('form#playlistSettings');
 		$form.submit(function(event) {
@@ -410,23 +409,33 @@ window.Mixtape.playlistSettings = {
 		});
 		$('#startLengthInSongs').change(function() {
 			$('#startLengthInMinutes').val('0');
-		})
+		});
 
+		$('.slider-container input[type=hidden]').each(
+				function(index) {
+					$(this).closest('.slider-container').find('.valueLabel')
+							.text($(this).val());
+				});
 		$('.slider').slider(
 				{
 					slide : function(event, ui) {
+						console.log(ui);
 						$(event.target).closest('.slider-container').find(
 								'.valueLabel').text(ui.value);
 						$(event.target).closest('.slider-container').find(
 								'input[type=hidden]').val(ui.value);
 					},
-					value : Mixtape.playlistSettings.initialSliderValue,
 					min : 0,
 					max : 100,
 					step : 1
 				});
-		$('.slider-container .valueLabel').text(this.initialSliderValue);
-		$('.slider-container input[type=hidden]').val(this.initialSliderValue);
+
+		$('.slider').each(
+				function(index) {
+					$(this).slider("option", "value", $(this).closest(
+							'.slider-container').find('input[type=hidden]')
+							.val());
+				});
 	}
 };
 
