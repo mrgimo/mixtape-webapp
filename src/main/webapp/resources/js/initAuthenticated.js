@@ -423,7 +423,7 @@ window.Mixtape.playlistSettings = {
 					value : Mixtape.playlistSettings.initialSliderValue,
 					min : 0,
 					max : 100,
-					step : 10
+					step : 1
 				});
 		$('.slider-container .valueLabel').text(this.initialSliderValue);
 		$('.slider-container input[type=hidden]').val(this.initialSliderValue);
