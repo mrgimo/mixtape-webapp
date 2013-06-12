@@ -12,7 +12,7 @@
 <booleanAttribute key="M2_WORKSPACE_RESOLUTION" value="false"/>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
 <mapEntry key="mixtapeData" value="C:\mixtapeData\"/>
-<mapEntry key="mixtapeLoglevel" value="DEBUG"/>
+<mapEntry key="mixtapeLogLevel" value="DEBUG"/>
 <mapEntry key="mixtapeMusicDir" value="C:\Audio"/>
 </mapAttribute>
 <stringAttribute key="org.eclipse.debug.core.source_locator_id" value="org.eclipse.m2e.launching.MavenSourceLocator"/>

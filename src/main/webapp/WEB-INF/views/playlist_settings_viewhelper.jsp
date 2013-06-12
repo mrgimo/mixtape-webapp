@@ -144,8 +144,6 @@
 
 	<hr />
 
-	<form:hidden path="id" />
-
 	<input type="submit" class="btn btn-primary"
 		value="Wiedergabeliste generieren" />
 

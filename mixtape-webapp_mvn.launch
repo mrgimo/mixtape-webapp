@@ -12,7 +12,7 @@
 <booleanAttribute key="M2_WORKSPACE_RESOLUTION" value="false"/>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
 <mapEntry key="mixtapeData" value="C:\mixtapeData\"/>
-<mapEntry key="mixtapeLoglevel" value="WARN"/>
+<mapEntry key="mixtapeLogLevel" value="WARN"/>
 </mapAttribute>
 <stringAttribute key="org.eclipse.debug.ui.ATTR_CONSOLE_ENCODING" value="UTF-8"/>
 <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
