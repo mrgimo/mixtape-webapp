@@ -18,8 +18,7 @@ public class MixtapeServletContextListener extends ContextLoaderListener {
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
 		super.contextInitialized(sce);
-		// Just to make sure ServerService is initialized.
-		getServerService();
+		getServerService().startUp();
 	}
 	
 	@Override
