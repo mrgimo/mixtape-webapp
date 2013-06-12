@@ -1,10 +1,10 @@
 package ch.hsr.mixtape.webapp;
 
+import static ch.hsr.mixtape.application.ApplicationFactory.getServerService;
+
 import javax.servlet.ServletContextEvent;
 
 import org.springframework.web.context.ContextLoaderListener;
-
-import ch.hsr.mixtape.application.ApplicationFactory;
 
 /**
  * This context listener just makes sure everything within mixtape is shut down
@@ -16,8 +16,15 @@ import ch.hsr.mixtape.application.ApplicationFactory;
 public class MixtapeServletContextListener extends ContextLoaderListener {
 
 	@Override
+	public void contextInitialized(ServletContextEvent sce) {
+		super.contextInitialized(sce);
+		// Just to make sure ServerService is initialized.
+		getServerService();
+	}
+	
+	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
-		ApplicationFactory.getServerService().shutdown();
+		getServerService().shutdown();
 		super.contextDestroyed(sce);
 	}
 
