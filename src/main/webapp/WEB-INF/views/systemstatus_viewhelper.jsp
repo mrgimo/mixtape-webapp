@@ -63,7 +63,7 @@
 								style="width: ${systemstatus.progress}%;">${systemstatus.progress}%</div>
 						</div>
 						<div id="systemStatusHead">
-							Titel <span>Fortschritt</span>
+							Titel (max. 50) <span>Fortschritt</span>
 						</div>
 						<ul class="table unstyled" id="pendingSongs">
 							<c:forEach var="song" items="${systemstatus.pendingSongs}">
