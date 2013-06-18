@@ -125,7 +125,7 @@ function base64_decode(data) {
 
 window.Mixtape.modal.isDisplayingError = false;
 
-window.Mixtape.server.statisticsFetchInterval = 10000;
+window.Mixtape.server.statisticsFetchInterval = 5000;
 
 window.Mixtape.server.getStatistics = function() {
 	$.ajax({

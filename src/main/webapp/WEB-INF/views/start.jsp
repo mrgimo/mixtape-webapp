@@ -107,7 +107,7 @@
 						<h2>Systemstatus</h2>
 						<h3>Systemübersicht</h3>
 						<p class="text-info">Diese Anzeige aktualisiert sich
-							automatisch alle 10 Sekunden.</p>
+							automatisch alle 5 Sekunden.</p>
 						<div id="scanMusicDirectory">
 							<a href="#" class="btn btn-primary btn-mini">Musikverzeichnis
 								neu einlesen</a> <span class="label label-warning hide">Das
