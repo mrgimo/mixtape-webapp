@@ -334,6 +334,9 @@ window.Mixtape = {
 					$('.player').remove('audio');
 					$('.player').prepend(Mixtape.playback.audio);
 					$('.player audio').addClass('hidden');
+					$('.player audio').bind('ended', function() {
+						Mixtape.playlist.advance();
+					})
 				},
 				error : function(jqXHR) {
 					Mixtape.modal.displayError(jqXHR);
@@ -404,13 +407,11 @@ window.Mixtape = {
 		},
 		
 		advance: function() {
-			console.log('advance');
 			$.ajax({
 				url : document.location.pathname + 'playlist/advance',
 				type : 'POST',
 				cache : false,
 				success : function(PlainObjectData) {
-					console.log("success");
 					if ($('#playlist tr').length > 1) {
 						$('#playbackNextSong').removeClass('hidden');
 					} else {
@@ -419,7 +420,6 @@ window.Mixtape = {
 					Mixtape.playback.listen();
 				},
 				error : function(jqXHR) {
-					console.log("error");
 					Mixtape.modal.displayError(jqXHR);
 				}
 			});
