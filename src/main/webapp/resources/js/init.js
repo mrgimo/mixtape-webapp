@@ -204,7 +204,7 @@ window.Mixtape = {
 							Mixtape.serverStatusCheckInterval);
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
-					displayStatus(jqXHR);
+					Mixtape.server.displayStatus(jqXHR);
 					setTimeout(Mixtape.server.checkStatus,
 							Mixtape.serverStatusCheckInterval);
 				}
@@ -293,6 +293,55 @@ window.Mixtape = {
 		}
 	},
 
+	playback : {
+		audio: {},
+		init : function() {
+			// When playlist is already playing.
+			if ($('.player audio').attr('src') !== undefined)
+				return;
+			
+			if ($('#playlist').length !== 0 && $('.noPlaylist').length === 0) {
+				$('.player').removeClass('hidden');
+				Mixtape.playback.listen();
+			}
+			
+			$('#playbackPause').click(function() {
+				Mixtape.playback.audio.pause();
+			});
+			$('#playbackPlay').click(function() {
+				Mixtape.playback.audio.play();
+			});
+			$('#playbackNextSong').click(function() {
+				Mixtape.playlist.advance();
+			});
+		},
+		listen : function() {
+			$.ajax({
+				url : document.location.pathname + 'playback/listen',
+				type : 'GET',
+				cache : false,
+				success : function(PlainObjectData) {
+					if (Mixtape.playback.audio.paused === false)
+						Mixtape.playback.audio.pause();
+					
+					var song = decodeURIComponent(PlainObjectData);
+					Mixtape.playback.audio = new Audio("");
+					Mixtape.playback.audio.src = document.location.pathname + song;
+					Mixtape.playback.audio.addEventListener('canplay', function() {
+						Mixtape.playback.audio.play();
+					}, false);
+					
+					$('.player').remove('audio');
+					$('.player').prepend(Mixtape.playback.audio);
+					$('.player audio').addClass('hidden');
+				},
+				error : function(jqXHR) {
+					Mixtape.modal.displayError(jqXHR);
+				}
+			});
+		}
+	},
+
 	/**
 	 * Playlist
 	 */
@@ -305,9 +354,10 @@ window.Mixtape = {
 		 * overwritten in initAuthenticated.js!
 		 */
 		init : function(isPlaylistInitialized) {
-			if (isPlaylistInitialized)
+			if (isPlaylistInitialized) {
 				Mixtape.query.enableWishInputHandler();
-			else
+				Mixtape.playback.init();
+			} else
 				Mixtape.query.disableWishInputHandler();
 
 			Mixtape.playlist.initTooltips();
@@ -350,6 +400,28 @@ window.Mixtape = {
 			});
 			$('.tooltip > div').click(function() {
 				$(this).hide();
+			});
+		},
+		
+		advance: function() {
+			console.log('advance');
+			$.ajax({
+				url : document.location.pathname + 'playlist/advance',
+				type : 'POST',
+				cache : false,
+				success : function(PlainObjectData) {
+					console.log("success");
+					if ($('#playlist tr').length > 1) {
+						$('#playbackNextSong').removeClass('hidden');
+					} else {
+						$('#playbackNextSong').addClass('hidden');
+					}
+					Mixtape.playback.listen();
+				},
+				error : function(jqXHR) {
+					console.log("error");
+					Mixtape.modal.displayError(jqXHR);
+				}
 			});
 		},
 
@@ -442,8 +514,9 @@ $(document).ready(function() {
 	 */
 	Mixtape.authentication.onPageLoad();
 	Mixtape.query.initAllQueryInputHandlers();
+	Mixtape.playback.init();
 	Mixtape.playlist.init();
-	Mixtape.server.checkStatus();
+	// Mixtape.server.checkStatus();
 	Mixtape.playlist.update.connect();
 });
 

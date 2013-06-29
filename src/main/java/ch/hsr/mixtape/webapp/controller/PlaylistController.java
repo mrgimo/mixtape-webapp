@@ -1,8 +1,10 @@
 package ch.hsr.mixtape.webapp.controller;
 
+import static ch.hsr.mixtape.application.ApplicationFactory.getPlaylistPlaybackService;
 import static ch.hsr.mixtape.application.ApplicationFactory.getPlaylistService;
 import static ch.hsr.mixtape.application.ApplicationFactory.getQueryService;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.List;
@@ -79,6 +81,18 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@RequestParam(value = "maxResults", defaultValue = "0") int maxResults) {
 		return new ModelAndView("songquery_viewhelper", "queriedSongs",
 				getQueryService().findSongsByTerm(term, maxResults));
+	}
+
+	@PreAuthorize("permitAll")
+	@RequestMapping(value = "/playlist/advance", method = RequestMethod.POST)
+	public void advanceToNextSong(HttpServletRequest request,
+			HttpServletResponse response, Principal principal) throws GUIException {
+		try {
+			getPlaylistPlaybackService().advanceToNextSong();
+			notifyPlaylistSubscribers(request, response, principal);
+		} catch (InvalidPlaylistException | IOException e) {
+			LOG.error("An error occurred during playback.", e);
+		}
 	}
 
 	/**

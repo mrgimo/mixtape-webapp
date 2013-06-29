@@ -5,12 +5,12 @@
 	<tbody>
 		<c:choose>
 			<c:when test="${noPlaylist}">
-				<tr>
+				<tr class="noPlaylist">
 					<td>Derzeit steht keine Wiedergabeliste bereit.</td>
 				</tr>
 			</c:when>
 			<c:when test="${empty playlist or empty playlist.items}">
-				<tr>
+				<tr class="noPlaylist">
 					<td>Die Wiedergabeliste ist derzeit leer.</td>
 				</tr>
 			</c:when>

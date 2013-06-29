@@ -51,13 +51,6 @@
 						herauszufinden, was man alles mit den neuen Technologien HTML5 und
 						CSS3 umsetzen kann - wo die Arbeit vereinfacht wird und wo nicht.
 					</p>
-					<div class="player">
-						<audio controls="controls" preload="metadata">
-							<source src="/mixtape-webapp/resources/TEMP_CanonSample.ogg"
-								type="audio/ogg"></source>
-							<p>Dein Browser unterstützt die Wiedergabe nicht.</p>
-						</audio>
-					</div>
 				</div>
 				<div class="tab-pane" id="music">
 					<div class="row-fluid">
@@ -81,6 +74,14 @@
 						</div>
 						<div class="span4">
 							<h2>Aktuelle Wiedergabeliste</h2>
+							<div class="player hidden">
+								<audio controls autoplay preload="auto">
+									<p>Dein Browser unterstützt die Wiedergabe nicht.</p>
+								</audio>
+								<a href="#" class="audioControls" id="playbackPlay"><i class="icon-play-circle"></i> Play</a>
+								<a href="#" class="audioControls" id="playbackPause"><i class="icon-pause"></i> Pause</a>
+								<a href="#" class="audioControls" id="playbackNextSong"><i class="icon-step-forward"></i> Next</a>
+							</div>
 							<p>Folgende Lieder werden als nächstes abgespielt.
 								Hervorgehobene Einträge stellen Wünsche von Benutzern dar.</p>
 							<div id="playlist">

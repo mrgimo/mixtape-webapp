@@ -33,6 +33,11 @@
 /**
  * Playlist
  */
+.audioControls {
+	display: inline-block;
+	margin-right: 30px;
+}
+
 #playlist {
 	max-height: 460px;
 	overflow: auto;
@@ -68,6 +73,8 @@
 	opacity: 1;
 	padding: 10px;
 	position: absolute;
+	right: 41%;
+	top: 186px;
 	z-index: 1030;
 }
 
