@@ -331,10 +331,10 @@ window.Mixtape = {
 						Mixtape.playback.audio.play();
 					}, false);
 					
-					$('.player').remove('audio');
-					$('.player').prepend(Mixtape.playback.audio);
-					$('.player audio').addClass('hidden');
-					$('.player audio').bind('ended', function() {
+					$('.playerContainer').html('');
+					$('.playerContainer').prepend(Mixtape.playback.audio);
+					$('.playerContainer audio').addClass('hidden');
+					$('.playerContainer audio').bind('ended', function() {
 						Mixtape.playlist.advance();
 					})
 				},

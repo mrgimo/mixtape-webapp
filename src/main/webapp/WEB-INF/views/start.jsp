@@ -75,9 +75,11 @@
 						<div class="span4">
 							<h2>Aktuelle Wiedergabeliste</h2>
 							<div class="player hidden">
-								<audio controls autoplay preload="auto">
-									<p>Dein Browser unterstützt die Wiedergabe nicht.</p>
-								</audio>
+								<div class="playerContainer">
+									<audio controls autoplay preload="auto">
+										<p>Dein Browser unterstützt die Wiedergabe nicht.</p>
+									</audio>
+								</div>
 								<a href="#" class="audioControls" id="playbackPlay"><i class="icon-play-circle"></i> Play</a>
 								<a href="#" class="audioControls" id="playbackPause"><i class="icon-pause"></i> Pause</a>
 								<a href="#" class="audioControls" id="playbackNextSong"><i class="icon-step-forward"></i> Next</a>
