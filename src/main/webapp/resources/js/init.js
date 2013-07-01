@@ -474,7 +474,8 @@ window.Mixtape = {
 					console.log('Atmosphere message received.');
 					$('#playlist').html(response.responseBody);
 
-					Mixtape.playlist.userAddedWish = $('#playlistUpdateIsUserAddedWish').length !== 0 ? true
+					Mixtape.playlist.userAddedWish = $(
+							'#playlistUpdateIsUserAddedWish').val() !== "0" ? true
 							: false;
 
 					if (Mixtape.playlist.initAuthenticated !== undefined)
