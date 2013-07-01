@@ -43,6 +43,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 
+import ch.hsr.mixtape.application.service.PlaylistSubscriber;
 import ch.hsr.mixtape.exception.InvalidPlaylistException;
 import ch.hsr.mixtape.exception.PlaylistChangedException;
 import ch.hsr.mixtape.model.PlaylistSettings;
@@ -58,7 +59,8 @@ import ch.hsr.mixtape.webapp.NoOpView;
  * @author Stefan Derungs
  */
 @Controller
-public class PlaylistController implements MixtapeExceptionHandling {
+public class PlaylistController implements MixtapeExceptionHandling,
+		PlaylistSubscriber {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(PlaylistController.class);
@@ -69,6 +71,31 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	@Autowired
 	private ViewResolver viewResolver;
+
+	/**
+	 * Hacky thing :-)
+	 */
+	protected static class NotificationStub {
+		public static HttpServletRequest request;
+		public static HttpServletResponse response;
+		public static Principal principal;
+		public static boolean isUserWish;
+
+		public static void set(HttpServletRequest req, HttpServletResponse res,
+				Principal prince, boolean userWish) {
+			request = req;
+			response = res;
+			principal = prince;
+			isUserWish = userWish;
+		}
+
+		public static void clear() {
+			request = null;
+			response = null;
+			principal = null;
+			isUserWish = false;
+		}
+	}
 
 	/**
 	 * @param term
@@ -86,10 +113,12 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	@PreAuthorize("permitAll")
 	@RequestMapping(value = "/playlist/advance", method = RequestMethod.POST)
 	public void advanceToNextSong(HttpServletRequest request,
-			HttpServletResponse response, Principal principal) throws GUIException {
+			HttpServletResponse response, Principal principal)
+			throws GUIException {
 		try {
-			getPlaylistPlaybackService().advanceToNextSong();
-			notifyPlaylistSubscribers(request, response, principal, false);
+			NotificationStub.set(request, response, principal, false);
+			
+			getPlaylistPlaybackService().advanceToNextSong(this);
 		} catch (InvalidPlaylistException | IOException e) {
 			LOG.error("An error occurred during playback.", e);
 		}
@@ -112,7 +141,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws GUIException, InvalidPlaylistException {
 
 		/*
-		 * Really dirty hack just made because error not found and not enought
+		 * Really dirty hack just made because error not found and not enough
 		 * time to fix the issue. Somehow Spring puts the first startSongs-entry
 		 * twice (once at the beginning and once at the end of the list) if the
 		 * list has more than one element.
@@ -121,8 +150,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			playlistSettings.getStartSongs().remove(
 					playlistSettings.getStartSongs().size() - 1);
 
-		getPlaylistService().createPlaylist(playlistSettings);
-		notifyPlaylistSubscribers(request, response, principal, false);
+		NotificationStub.set(request, response, principal, false);
+		getPlaylistService().createPlaylist(playlistSettings, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -164,8 +193,9 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
-		getPlaylistService().alterSorting(songId, oldPosition, newPosition);
-		notifyPlaylistSubscribers(request, response, principal, true);
+		NotificationStub.set(request, response, principal, true);
+		
+		getPlaylistService().alterSorting(songId, oldPosition, newPosition, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -187,8 +217,9 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws InvalidPlaylistException, PlaylistChangedException,
 			GUIException {
 
-		getPlaylistService().removeSong(songId, songPosition);
-		notifyPlaylistSubscribers(request, response, principal, true);
+		NotificationStub.set(request, response, principal, true);
+		
+		getPlaylistService().removeSong(songId, songPosition, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -206,8 +237,9 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			@RequestParam(value = "songId") int songId)
 			throws InvalidPlaylistException, GUIException {
 
-		getPlaylistService().addWish(songId);
-		notifyPlaylistSubscribers(request, response, principal, true);
+		NotificationStub.set(request, response, principal, true);
+		
+		getPlaylistService().addWish(songId, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -272,7 +304,9 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	/**
 	 * Atmosphere: See AtmosphereHandlerPubSub example - same code as POST
-	 * @param isUserWish TODO
+	 * 
+	 * @param isUserWish
+	 *            TODO
 	 * 
 	 * @see [https
 	 *      ://github.com/Atmosphere/atmosphere-extensions/blob/master/spring
@@ -283,8 +317,8 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 * @throws GUIException
 	 */
 	private void notifyPlaylistSubscribers(HttpServletRequest request,
-			HttpServletResponse response, Principal principal, boolean isUserWish)
-			throws InvalidPlaylistException, GUIException {
+			HttpServletResponse response, Principal principal,
+			boolean isUserWish) throws InvalidPlaylistException, GUIException {
 		final String errorMessage = "Notifying playlist subscribers failed: ";
 		try {
 			LOG.debug("Notifying playlist subscribers about an update.");
@@ -363,6 +397,18 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	public @ResponseBody
 	ModelAndView handleException(Exception e) {
 		return MixtapeExceptionHandler.handleException(e, LOG);
+	}
+
+	@Override
+	public void notifyPlaylistReady() {
+		try {
+			notifyPlaylistSubscribers(NotificationStub.request,
+					NotificationStub.response, NotificationStub.principal, false);
+		} catch (InvalidPlaylistException | GUIException e) {
+			LOG.error("Playlist notification failed.", e);
+		} finally {
+			NotificationStub.clear();
+		}
 	}
 
 }
