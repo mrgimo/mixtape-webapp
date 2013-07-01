@@ -117,7 +117,7 @@ public class PlaylistController implements MixtapeExceptionHandling,
 			throws GUIException {
 		try {
 			NotificationStub.set(request, response, principal, false);
-			
+
 			getPlaylistPlaybackService().advanceToNextSong(this);
 		} catch (InvalidPlaylistException | IOException e) {
 			LOG.error("An error occurred during playback.", e);
@@ -194,8 +194,9 @@ public class PlaylistController implements MixtapeExceptionHandling,
 			GUIException {
 
 		NotificationStub.set(request, response, principal, true);
-		
-		getPlaylistService().alterSorting(songId, oldPosition, newPosition, this);
+
+		getPlaylistService().alterSorting(songId, oldPosition, newPosition,
+				this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -218,7 +219,7 @@ public class PlaylistController implements MixtapeExceptionHandling,
 			GUIException {
 
 		NotificationStub.set(request, response, principal, true);
-		
+
 		getPlaylistService().removeSong(songId, songPosition, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
@@ -238,7 +239,7 @@ public class PlaylistController implements MixtapeExceptionHandling,
 			throws InvalidPlaylistException, GUIException {
 
 		NotificationStub.set(request, response, principal, true);
-		
+
 		getPlaylistService().addWish(songId, this);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
@@ -336,6 +337,7 @@ public class PlaylistController implements MixtapeExceptionHandling,
 				playlistView.addObject("isUserWish", isUserWish);
 			} catch (InvalidPlaylistException e) {
 				playlistView.addObject("noPlaylist", true);
+				playlistView.addObject("isUserWish", true);
 			}
 
 			/*
@@ -403,7 +405,8 @@ public class PlaylistController implements MixtapeExceptionHandling,
 	public void notifyPlaylistReady() {
 		try {
 			notifyPlaylistSubscribers(NotificationStub.request,
-					NotificationStub.response, NotificationStub.principal, false);
+					NotificationStub.response, NotificationStub.principal,
+					NotificationStub.isUserWish);
 		} catch (InvalidPlaylistException | GUIException e) {
 			LOG.error("Playlist notification failed.", e);
 		} finally {

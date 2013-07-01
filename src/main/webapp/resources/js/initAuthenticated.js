@@ -226,6 +226,7 @@ window.Mixtape.playlist.initAuthenticated = function(isPlaylistInitialized) {
 	Mixtape.playlist.initRemoveSongHandler();
 }
 window.Mixtape.playlist.sort = function(songId, oldPosition, newPosition) {
+	Mixtape.playlist.showOverlay();
 	$
 			.ajax({
 				url : document.location.pathname + 'playlist/sort?songId='
@@ -234,9 +235,11 @@ window.Mixtape.playlist.sort = function(songId, oldPosition, newPosition) {
 				type : 'POST',
 				cache : false,
 				success : function(PlainObjectData, textStatus, jqXHR) {
+					Mixtape.playlist.hideOverlay();
 					console.log('Success sorting.');
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
+					Mixtape.playlist.hideOverlay();
 					Mixtape.modal.displayError(jqXHR);
 				}
 			});
@@ -251,7 +254,7 @@ window.Mixtape.playlist.initSortHandler = function() {
 		},
 		stop : function(event, ui) {
 			if (ui.item.index() !== oldPosition) {
-				Mixtape.playlist.sort(songId, oldPosition, ui.item.index());
+				Mixtape.playlist.sort(songId, parseInt(oldPosition)-1, parseInt(ui.item.index())-1);
 			}
 		}
 	});
@@ -270,15 +273,19 @@ window.Mixtape.playlist.removeSong = function(listIndex, songId) {
 		return;
 	}
 
+	Mixtape.playlist.showOverlay();
+	
 	$.ajax({
 		url : document.location.pathname + 'playlist/remove?songId=' + songId
 				+ '&songPosition=' + listIndex,
 		type : 'POST',
 		cache : false,
 		success : function(PlainObjectData, textStatus, jqXHR) {
+			Mixtape.playlist.hideOverlay();
 			console.log('Removing song successful.');
 		},
 		error : function(jqXHR, textStatus, errorThrown) {
+			Mixtape.playlist.hideOverlay();
 			Mixtape.modal.displayError(jqXHR);
 		}
 	});

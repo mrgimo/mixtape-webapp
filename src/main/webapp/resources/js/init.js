@@ -509,22 +509,57 @@ window.Mixtape = {
 		 * Adds a wish to the playlist upon user selection.
 		 */
 		addWish : function(element) {
+			Mixtape.playlist.showOverlay();
 			$.ajax({
 				url : document.location.pathname + 'playlist/wish?songId='
 						+ $(element).find('input').val(),
 				type : 'POST',
 				cache : false,
 				success : function(PlainObjectData, textStatus, jqXHR) {
+					Mixtape.playlist.hideOverlay();
 					console.log('Success adding wish.');
 				},
 				error : function(jqXHR, textStatus, errorThrown) {
+					Mixtape.playlist.hideOverlay();
 					Mixtape.modal.displayError(jqXHR);
 				}
 			});
 		},
+		userAddedWish : false,
 
-		userAddedWish : false
-	// TODO
+		overlay : null,
+		setupOverlay : function() {
+			var playlist = $('#playlist');
+			var position = playlist.position();
+			var overlay = $('<div id="playlistOverlay"><div class="bar" style="width: 100%; background-repeat: repeat"></div></div>');
+			overlay
+					.addClass('progress progress-striped progress-info active');
+			overlay.css({
+				'width' : playlist.css('width'),
+				'height' : playlist.css('height'),
+				'left' : position.left,
+				'top' : position.top,
+				'opacity' : '0.5',
+				'filter' : 'alpha(opacity=50)',
+				'z-index' : '9999',
+				'display' : 'hidden',
+				'position' : 'absolute'
+			});
+			$('body').append(overlay);
+			Mixtape.playlist.overlay = overlay;
+		},
+		showOverlay : function() {
+			if (Mixtape.playlist.overlay == null)
+				Mixtape.playlist.setupOverlay();
+
+			Mixtape.playlist.overlay.show();
+		},
+		hideOverlay : function() {
+			if (Mixtape.playlist.overlay == null)
+				Mixtape.playlist.setupOverlay();
+
+			Mixtape.playlist.overlay.hide();
+		}
 	}
 }
 
