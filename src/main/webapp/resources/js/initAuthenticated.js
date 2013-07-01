@@ -419,7 +419,6 @@ window.Mixtape.playlistSettings = {
 		$('.slider').slider(
 				{
 					slide : function(event, ui) {
-						console.log(ui);
 						$(event.target).closest('.slider-container').find(
 								'.valueLabel').text(ui.value);
 						$(event.target).closest('.slider-container').find(

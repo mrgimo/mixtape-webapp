@@ -365,8 +365,11 @@ window.Mixtape = {
 		init : function(isPlaylistInitialized) {
 			if (isPlaylistInitialized) {
 				Mixtape.query.enableWishInputHandler();
-				Mixtape.playback.init();
-				Mixtape.playback.listen();
+				if (!Mixtape.playlist.userAddedWish) {
+					Mixtape.playback.init();
+					Mixtape.playback.listen();	
+				}
+				Mixtape.playlist.userAddedWish = false;
 			} else
 				Mixtape.query.disableWishInputHandler();
 
@@ -491,6 +494,7 @@ window.Mixtape = {
 		initWishHandler : function() {
 			$('#wishQueryResults li').click(function(event) {
 				event.preventDefault();
+				Mixtape.playlist.userAddedWish = true;
 				Mixtape.playlist.addWish(this);
 			});
 		},
@@ -511,7 +515,9 @@ window.Mixtape = {
 					Mixtape.modal.displayError(jqXHR);
 				}
 			});
-		}
+		},
+		
+		userAddedWish: false
 	}
 }
 
