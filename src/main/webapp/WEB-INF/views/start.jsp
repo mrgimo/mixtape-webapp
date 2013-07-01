@@ -83,6 +83,7 @@
 								<a href="#" class="audioControls" id="playbackPlay"><i class="icon-play-circle"></i> Play</a>
 								<a href="#" class="audioControls" id="playbackPause"><i class="icon-pause"></i> Pause</a>
 								<a href="#" class="audioControls" id="playbackNextSong"><i class="icon-step-forward"></i> Next</a>
+								<div id="playbackCurrentSong"></div>
 							</div>
 							<p>Folgende Lieder werden als nächstes abgespielt.
 								Hervorgehobene Einträge stellen Wünsche von Benutzern dar.</p>

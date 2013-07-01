@@ -33,9 +33,18 @@
 /**
  * Playlist
  */
+.player {
+	border: 1px solid #CCCCCC;
+	border-radius: 4px;
+	padding: 10px;
+	margin-bottom: 10px;
+}
 .audioControls {
 	display: inline-block;
 	margin-right: 30px;
+}
+#playbackCurrentSong {
+	margin-top: 5px;
 }
 
 #playlist {

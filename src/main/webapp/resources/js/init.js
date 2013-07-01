@@ -294,17 +294,17 @@ window.Mixtape = {
 	},
 
 	playback : {
-		audio: {},
+		audio : {},
 		init : function() {
 			// When playlist is already playing.
-			if ($('.player audio').attr('src') !== undefined)
+			if ($('.player audio').attr('src') !== undefined && Mixtape.playback.audio.paused !== false)
 				return;
-			
+
 			if ($('#playlist').length !== 0 && $('.noPlaylist').length === 0) {
 				$('.player').removeClass('hidden');
 				Mixtape.playback.listen();
 			}
-			
+
 			$('#playbackPause').click(function() {
 				Mixtape.playback.audio.pause();
 			});
@@ -323,14 +323,20 @@ window.Mixtape = {
 				success : function(PlainObjectData) {
 					if (Mixtape.playback.audio.paused === false)
 						Mixtape.playback.audio.pause();
-					
+
 					var song = decodeURIComponent(PlainObjectData);
 					Mixtape.playback.audio = new Audio("");
-					Mixtape.playback.audio.src = document.location.pathname + song;
-					Mixtape.playback.audio.addEventListener('canplay', function() {
-						Mixtape.playback.audio.play();
-					}, false);
-					
+					Mixtape.playback.audio.src = document.location.pathname
+							+ song;
+					Mixtape.playback.audio.addEventListener('canplay',
+							function() {
+								Mixtape.playback.audio.play();
+							}, false);
+
+					var startPos = parseInt(song.lastIndexOf('/')) + 1;
+					var endPos = parseInt(song.lastIndexOf('.'));
+					$('#playbackCurrentSong').text(song.substr(startPos, endPos-startPos));
+
 					$('.playerContainer').html('');
 					$('.playerContainer').prepend(Mixtape.playback.audio);
 					$('.playerContainer audio').addClass('hidden');
@@ -360,6 +366,7 @@ window.Mixtape = {
 			if (isPlaylistInitialized) {
 				Mixtape.query.enableWishInputHandler();
 				Mixtape.playback.init();
+				Mixtape.playback.listen();
 			} else
 				Mixtape.query.disableWishInputHandler();
 
@@ -405,8 +412,8 @@ window.Mixtape = {
 				$(this).hide();
 			});
 		},
-		
-		advance: function() {
+
+		advance : function() {
 			$.ajax({
 				url : document.location.pathname + 'playlist/advance',
 				type : 'POST',
