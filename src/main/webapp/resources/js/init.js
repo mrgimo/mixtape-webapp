@@ -297,7 +297,8 @@ window.Mixtape = {
 		audio : {},
 		init : function() {
 			// When playlist is already playing.
-			if ($('.player audio').attr('src') !== undefined && Mixtape.playback.audio.paused !== false)
+			if ($('.player audio').attr('src') !== undefined
+					&& Mixtape.playback.audio.paused !== false)
 				return;
 
 			if ($('#playlist').length !== 0 && $('.noPlaylist').length === 0) {
@@ -335,7 +336,8 @@ window.Mixtape = {
 
 					var startPos = parseInt(song.lastIndexOf('/')) + 1;
 					var endPos = parseInt(song.lastIndexOf('.'));
-					$('#playbackCurrentSong').text(song.substr(startPos, endPos-startPos));
+					$('#playbackCurrentSong').text(
+							song.substr(startPos, endPos - startPos));
 
 					$('.playerContainer').html('');
 					$('.playerContainer').prepend(Mixtape.playback.audio);
@@ -367,7 +369,7 @@ window.Mixtape = {
 				Mixtape.query.enableWishInputHandler();
 				if (!Mixtape.playlist.userAddedWish) {
 					Mixtape.playback.init();
-					Mixtape.playback.listen();	
+					Mixtape.playback.listen();
 				}
 				Mixtape.playlist.userAddedWish = false;
 			} else
@@ -471,6 +473,10 @@ window.Mixtape = {
 				onMessage : function(response) {
 					console.log('Atmosphere message received.');
 					$('#playlist').html(response.responseBody);
+
+					Mixtape.playlist.userAddedWish = $('#playlistUpdateIsUserAddedWish').length !== 0 ? true
+							: false;
+
 					if (Mixtape.playlist.initAuthenticated !== undefined)
 						Mixtape.playlist.initAuthenticated(true);
 					else
@@ -494,7 +500,6 @@ window.Mixtape = {
 		initWishHandler : function() {
 			$('#wishQueryResults li').click(function(event) {
 				event.preventDefault();
-				Mixtape.playlist.userAddedWish = true;
 				Mixtape.playlist.addWish(this);
 			});
 		},
@@ -516,8 +521,9 @@ window.Mixtape = {
 				}
 			});
 		},
-		
-		userAddedWish: false
+
+		userAddedWish : false
+	// TODO
 	}
 }
 

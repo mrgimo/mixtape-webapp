@@ -89,7 +89,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			HttpServletResponse response, Principal principal) throws GUIException {
 		try {
 			getPlaylistPlaybackService().advanceToNextSong();
-			notifyPlaylistSubscribers(request, response, principal);
+			notifyPlaylistSubscribers(request, response, principal, false);
 		} catch (InvalidPlaylistException | IOException e) {
 			LOG.error("An error occurred during playback.", e);
 		}
@@ -122,7 +122,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 					playlistSettings.getStartSongs().size() - 1);
 
 		getPlaylistService().createPlaylist(playlistSettings);
-		notifyPlaylistSubscribers(request, response, principal);
+		notifyPlaylistSubscribers(request, response, principal, false);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -165,7 +165,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			GUIException {
 
 		getPlaylistService().alterSorting(songId, oldPosition, newPosition);
-		notifyPlaylistSubscribers(request, response, principal);
+		notifyPlaylistSubscribers(request, response, principal, true);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -188,7 +188,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			GUIException {
 
 		getPlaylistService().removeSong(songId, songPosition);
-		notifyPlaylistSubscribers(request, response, principal);
+		notifyPlaylistSubscribers(request, response, principal, true);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -207,7 +207,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			throws InvalidPlaylistException, GUIException {
 
 		getPlaylistService().addWish(songId);
-		notifyPlaylistSubscribers(request, response, principal);
+		notifyPlaylistSubscribers(request, response, principal, true);
 		return ControllerUtils.getResponseEntity(HttpStatus.OK);
 	}
 
@@ -272,6 +272,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 
 	/**
 	 * Atmosphere: See AtmosphereHandlerPubSub example - same code as POST
+	 * @param isUserWish TODO
 	 * 
 	 * @see [https
 	 *      ://github.com/Atmosphere/atmosphere-extensions/blob/master/spring
@@ -282,7 +283,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 	 * @throws GUIException
 	 */
 	private void notifyPlaylistSubscribers(HttpServletRequest request,
-			HttpServletResponse response, Principal principal)
+			HttpServletResponse response, Principal principal, boolean isUserWish)
 			throws InvalidPlaylistException, GUIException {
 		final String errorMessage = "Notifying playlist subscribers failed: ";
 		try {
@@ -298,6 +299,7 @@ public class PlaylistController implements MixtapeExceptionHandling {
 			try {
 				playlistView.addObject("playlist", getPlaylistService()
 						.getPlaylist());
+				playlistView.addObject("isUserWish", isUserWish);
 			} catch (InvalidPlaylistException e) {
 				playlistView.addObject("noPlaylist", true);
 			}

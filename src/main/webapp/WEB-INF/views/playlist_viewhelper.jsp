@@ -15,6 +15,14 @@
 				</tr>
 			</c:when>
 			<c:otherwise>
+				<c:choose>
+					<c:when test="${isUserWish}">
+						<input id="playlistUpdateIsUserAddedWish" type="hidden" value="1" />
+					</c:when>
+					<c:otherwise>
+						<input id="playlistUpdateIsUserAddedWish" type="hidden" value="0" />
+					</c:otherwise>
+				</c:choose>
 				<c:forEach items="${playlist.items}" var="item">
 					<tr class="playlistItem">
 						<td class="tooltip" data-toggle="tooltip"><c:choose>
@@ -39,7 +47,8 @@
 											<div class='clearfix'></div>
 											<small>Wahrnehmend: <span class='valueLabel'>${item.perceptualSimilarity}%</span></small>
 											<div class='progress'>
-												<div class='bar' style='width: ${item.perceptualSimilarity}%;'></div>
+												<div class='bar'
+													style='width: ${item.perceptualSimilarity}%;'></div>
 											</div>
 											<div class='clearfix'></div>
 											<small>Spektral: <span class='valueLabel'>${item.spectralSimilarity}%</span></small>
